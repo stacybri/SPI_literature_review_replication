@@ -1,4 +1,4 @@
-"0","#| label: volatilityplt1"
+"0","#| label: volatilityplt12"
 "0",""
 "0","volatility_scatter_df <- volatility_df %>%"
 "0","  select(-country, income, region) %>% #avoid conflicts with naming/income groups"

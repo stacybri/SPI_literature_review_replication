@@ -1379,6 +1379,44 @@ p1 + p2 + p3 + p4 +  p5 + p6 + p7 + p8 +  p9 + p10 + p11 + p12  +  p13 + p14 + p
 
 ```
 
+```{r}
+#get average for romania, serbia, and ukraine as in the paper
+vol_num <- volatility_scatter_df <- volatility_df %>%
+  filter(iso3c %in% c('ROU', "SRB", "UKR")) %>%
+  select(-country, -income, -region) %>% #avoid conflicts with naming/income groups
+  as_tibble() %>%
+  pivot_longer(
+    cols=c('SPI.INDEX', 'ODIN_score'),
+    names_to='indicator',
+    values_to='value'
+  ) %>%
+  pivot_wider(
+    values_from='value',
+    names_from='date',
+    names_prefix='value_'
+  ) %>%
+  mutate(indicator=case_when(
+    indicator=='ODIN_score' ~ "ODIN Score",
+    indicator=="SPI.INDEX" ~ "SPI Overall Score"
+  ))
+
+rou_num1 <- vol_num %>% filter(iso3c=="ROU") %>% filter(indicator=="SPI Overall Score") %>% pluck(7)
+rou_num2 <- vol_num %>% filter(iso3c=="ROU") %>% filter(indicator=="SPI Overall Score") %>% pluck(8)
+rou_diff <- rou_num2-rou_num1
+
+srb_num1 <- vol_num %>% filter(iso3c=="SRB") %>% filter(indicator=="SPI Overall Score") %>% pluck(8)
+srb_num2 <- vol_num %>% filter(iso3c=="SRB") %>% filter(indicator=="SPI Overall Score") %>% pluck(9)
+srb_diff <- srb_num2-srb_num1
+
+ukr_num1 <- vol_num %>% filter(iso3c=="UKR") %>% filter(indicator=="SPI Overall Score") %>% pluck(5)
+ukr_num2 <- vol_num %>% filter(iso3c=="UKR") %>% filter(indicator=="SPI Overall Score") %>% pluck(6)
+ukr_diff <- ukr_num2-ukr_num1
+
+(rou_diff + srb_diff + ukr_diff)/3
+
+```
+
+
 ## Figure 4. Absolute Value of Correlation between Key SDGs and Indexes 
 
 ```{r}
@@ -1510,6 +1548,8 @@ ggplot(fig, aes(x=var, y=abs(SPI...1))) +
       "GDB" = 19
     )
   ) +
+  xlab("") +
+  ylab("") +
   scale_x_discrete(labels=scales::wrap_format(30)) +
   theme_spi() +
   guides(
@@ -1518,7 +1558,8 @@ ggplot(fig, aes(x=var, y=abs(SPI...1))) +
     shape=guide_legend('Guide')
   ) +
   theme(axis.text.y=element_text(size=11),
-        legend.text = element_text(size=11))
+        legend.text = element_text(size=11),
+        legend.position = 'top')
 ```
 
 Figure 5. Theory of Change
@@ -1809,6 +1850,7 @@ for (i in 1:n) {
 #format as table
 pval_df <- as.data.frame(p_values) %>%
   cbind(SDG=sdg_names) %>%
+  select(-V1, -V7, -V13, -V19, -V25) %>%
   select(SDG, everything()) 
 
 
@@ -1822,22 +1864,22 @@ pval_df <- as.data.frame(p_values) %>%
 flextable(pval_df) %>%
   set_header_labels(
     SDG="SDG",
-    V1="GDB",V2="GDB",V3="GDB",V4="GDB",V5="GDB",
-    V6="ODB",V7="ODB",V8="ODB",V9="ODB",V10="ODB",
-    V11="ODIN",V12="ODIN",V13="ODIN",V14="ODIN",V15="ODIN",
-    V16="SCI",V17="SCI",V118="SCI",V19="SCI",V20="SCI",
-    V21="SPI",V22="SPI",V23="SPI",V24="SPI",V25="SPI"
+    V2="GDB",V3="GDB",V4="GDB",V5="GDB",
+    V6="ODB",V8="ODB",V9="ODB",V10="ODB",
+    V11="ODIN",V12="ODIN",V14="ODIN",V15="ODIN",
+    V16="SCI",V17="SCI",V118="SCI",V20="SCI",
+    V21="SPI",V22="SPI",V23="SPI",V24="SPI"
   ) %>%
-  merge_at(i=1,j=2:6, part = 'header') %>%
-  merge_at(i=1,j=7:11, part = 'header') %>%
-  merge_at(i=1,j=12:16, part = 'header') %>%
-  merge_at(i=1,j=17:21, part = 'header') %>%
-  merge_at(i=1,j=22:26, part = 'header') %>%
+  merge_at(i=1,j=2:5, part = 'header') %>%
+  merge_at(i=1,j=6:9, part = 'header') %>%
+  merge_at(i=1,j=10:13, part = 'header') %>%
+  merge_at(i=1,j=14:17, part = 'header') %>%
+  merge_at(i=1,j=18:21, part = 'header') %>%
   vline(j=1) %>%
-  vline(j=6) %>%
-  vline(j=11) %>%
-  vline(j=16) %>%
-  vline(j=21) %>%
+  vline(j=5) %>%
+  vline(j=9) %>%
+  vline(j=13) %>%
+  vline(j=17) %>%
   align(i=1, part="header", align="center")
 ```
 
@@ -2574,11 +2616,12 @@ volatility_df <- SPI %>%
 
 ```{r}
 #| label: volatilityplt1
-#| fig-height: 8
-#| fig-width: 12 
+#| fig-height: 6
+#| fig-width: 9
 
 
 volatility_scatter_df <- volatility_df %>%
+  select(-country, income, region) %>% #avoid conflicts with naming/income groups
   filter(date==2016 | date==2020) %>%
   as_tibble() %>%
   pivot_longer(
@@ -2592,12 +2635,57 @@ volatility_scatter_df <- volatility_df %>%
     names_prefix='value_'
   ) %>%
   mutate(indicator=case_when(
-    indicator=='SCI' ~ "SCI",
+    indicator=='SCI' ~ "SCI Overall Score",
     indicator=="SPI.INDEX" ~ "SPI Overall Score"
   ))
-ggplot(volatility_scatter_df, aes(x=value_2016, y=value_2020, label=iso3c)) +
-  facet_wrap(~indicator) +
-  geom_text(color='#457b9d') +
+
+# give a name to a formula
+spi_vol_df <- volatility_scatter_df %>%
+  filter(indicator=="SPI Overall Score")
+
+sci_vol_df <- volatility_scatter_df %>%
+  filter(indicator=="SCI Overall Score")
+
+#get reg output
+data = spi_vol_df
+inp = 'value_2020'
+var = 'value_2016'
+
+eq <- lm_robust(value_2020 ~ value_2016, data=data, se_type='HC2')
+coef <- round(coef(eq),1)
+std_err <- round(sqrt(diag(vcov(eq))),1)
+r_2<- round(summary(eq)$r.squared,2)
+spi_text <- sprintf(" y = %.1f + %.1f x, R<sup>2</sup> = %.2f <br> (%.1f) <span style='color:white'> %s</span> (%.1f) ", coef[1], coef[2], r_2[1], std_err[1],"s", std_err[2])
+
+#odin reg output
+data = sci_vol_df
+inp = 'value_2020'
+var = 'value_2016'
+
+eq <- lm_robust(value_2020 ~ value_2016, data=data, se_type='HC2')
+coef <- round(coef(eq),1)
+std_err <- round(sqrt(diag(vcov(eq))),1)
+r_2<- round(summary(eq)$r.squared,2)
+odin_text <- sprintf(" y = %.1f + %.1f x, R<sup>2</sup> = %.2f <br> (%.1f) <span style='color:white'> %s</span> (%.1f) ", coef[1], coef[2], r_2[1], std_err[1],"s", std_err[2])
+
+#plot
+ggplot(volatility_scatter_df, aes(x=value_2016, y=value_2020,color=indicator, group=indicator)) +
+  geom_point() +
+  geom_smooth( method='lm', se=FALSE) +
+  scale_color_manual(
+    values=c(
+      'SCI Overall Score' = "darkgreen",
+      'SPI Overall Score' ="blue" 
+    )
+  ) +  
+  #stat_poly_eq() +
+  geom_richtext(
+    aes(x = 10, y = 95,label = spi_text, hjust=0.2), colour="blue", size=4
+  ) +
+  geom_richtext(
+    aes(x = 55, y = 15,label = odin_text, hjust=0.2), colour="darkgreen", size=4
+  ) +
+
   # labs(
   #   title='Volatility Between 2016 and 2020 for SCI and SPI Overall Scores'
   # ) +
@@ -2605,5 +2693,6 @@ ggplot(volatility_scatter_df, aes(x=value_2016, y=value_2020, label=iso3c)) +
   ylab('2020 value') +
   expand_limits(x=c(0,100), y=c(0,100)) +
   theme_spi()
+    
     
 ```
