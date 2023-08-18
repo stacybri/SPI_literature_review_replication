@@ -1,0 +1,32 @@
+# Create a correlation matrix
+cor_matrix <- matrix(c(1.00, 0.70, 0.50,
+                       0.70, 1.00, 0.60,
+                       0.50, 0.60, 1.00), nrow = 3, byrow = TRUE)
+
+# Function to calculate p-value from z-score
+p_value_from_z <- function(z) {
+  2 * (1 - pnorm(abs(z)))
+}
+
+# Iterate through the correlation matrix
+n <- nrow(cor_matrix)
+p_values <- matrix(NA, n, n)  # Store p-values for each pairwise comparison
+
+for (i in 1:n) {
+  for (j in 1:n) {
+    r <- cor_matrix[i, j]  # Extract correlation coefficient
+    n_ij <- 10# Calculate the appropriate sample size for the correlation coefficient
+      
+      # Calculate Fisher's z-transform
+      z <- atanh(r)
+    
+    # Calculate standard error of z-transform
+    se <- 1 / sqrt(n_ij - 3)
+    
+    # Calculate p-value
+    p_values[i, j] <- p_value_from_z(z / se)
+  }
+}
+
+# Print p-values
+print(p_values)

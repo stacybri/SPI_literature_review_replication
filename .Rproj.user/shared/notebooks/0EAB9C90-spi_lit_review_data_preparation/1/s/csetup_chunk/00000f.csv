@@ -1,0 +1,47 @@
+"0","knitr::opts_chunk$set("
+"0","	echo = TRUE,"
+"0","	message = FALSE,"
+"0","	warning = FALSE,"
+"0","	fig.height=6,"
+"0","	fig.width = 8,"
+"0","	dev=c(""png"",""tiff"")"
+"0",")"
+"0","library(data.table)"
+"2","data.table 1.14.8 using 4 threads (see ?getDTthreads).  Latest news: r-datatable.com
+"
+"2","
+Attaching package: ‘data.table’
+
+"
+"2","The following objects are masked from ‘package:lubridate’:
+
+    hour, isoweek, mday, minute, month, quarter, second, wday, week, yday, year
+
+"
+"2","The following objects are masked from ‘package:dplyr’:
+
+    between, first, last
+
+"
+"2","The following object is masked from ‘package:purrr’:
+
+    transpose
+
+"
+"0","library(tidyverse)"
+"0","library(flextable)"
+"0","library(here)"
+"0","library(haven)"
+"0","library(wbstats)"
+"0","library(readxl)"
+"0","library(zoo)"
+"0","#devtools::install_github(""worldbank/pipr"")"
+"0","library(pipr) #World Bank PIP package"
+"2","Info: Session based caching is enabled.
+"
+"0","dir <- here()"
+"0","raw_dir <- paste0(dir, ""/01_raw_data/"")"
+"0","output_dir <- paste(dir, '/03_output/', sep=""/"")"
+"0","#weights (either unity (1) or population)"
+"0","wgt <- 1"
+"0","end_date=2022"

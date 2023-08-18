@@ -1,0 +1,3 @@
+"0","table_2_df <- read_excel(path = paste0(output_dir, ""/SPI_Index_compare.xlsx""))"
+"2","Error: `path` does not exist: 'C:/Users/wb469649/Documents/GitHub/SPI_literature_review_replication/03_output/SPI_Index_compare.xlsx'
+"

@@ -1,0 +1,9 @@
+data = spi_vol_df
+inp = 'value_2022'
+var = 'value_2016'
+
+eq <- lm_robust(value_2022 ~ value_2016, data=data, se_type='HC2')
+coef <- round(coef(eq),1)
+std_err <- round(sqrt(diag(vcov(eq))),1)
+r_2<- round(summary(eq)$r.squared,2)
+sprintf(" y = %.1f + %.1f x, R<sup>2</sup> = %.2f <br> (%.1f) <span style='color:white'> %s</span> (%.1f) ", coef[1], coef[2], r_2[1], std_err[1],"s", std_err[2])

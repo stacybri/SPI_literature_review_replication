@@ -1,0 +1,7 @@
+[2,"\n"]
+[1,"\r\n\r\nprocessing file: SPI_literature_review_charts.qmd\r\n1/7           \r\n2/7 [setup]   \r\n"]
+[1,"3/7           \r\n4/7 [fun]     \r\n"]
+[1,"5/7           \r\n6/7 [dataread]\r\n"]
+[1,"\r\nQuitting from lines 782-816 [dataread] (SPI_literature_review_charts.qmd)\r\n"]
+[1,"Error:\r\n! object 'pop_df' not found\r\nBacktrace:\r\n 1. read_csv(paste(raw_dir, \"SPI_index.csv\", sep = \"/\")) %>% ...\r\n 3. dplyr:::left_join.data.frame(., pop_df)\r\n 4. dplyr::auto_copy(x, y, copy = copy)\r\n 6. dplyr:::same_src.data.frame(x, y)\r\n 7. base::is.data.frame(y)\r\n"]
+[1,"Execution halted\r\n"]

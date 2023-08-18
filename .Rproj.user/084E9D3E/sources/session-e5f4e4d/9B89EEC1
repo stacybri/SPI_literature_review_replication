@@ -1,0 +1,27 @@
+{
+    "id": "9B89EEC1",
+    "path": "~/GitHub/SPI_literature_review_replication/02_programs/misc/spi_lit_review_data_preparation.Rmd",
+    "project_path": "02_programs/misc/spi_lit_review_data_preparation.Rmd",
+    "type": "r_markdown",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1692211973589.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "last_setup_crc32": "e5f4e4dd6446253",
+        "cursorPosition": "548,16",
+        "scrollLine": "542"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1692365191,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1692365192061,
+    "read_only": false,
+    "read_only_alternatives": []
+}
