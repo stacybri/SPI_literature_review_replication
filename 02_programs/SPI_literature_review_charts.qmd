@@ -2,7 +2,7 @@
 title: "Replication package for: Reviewing Assessment Tools for Measuring Country Statistical Capacity"
 author: "Brian Stacy"
 date: "8/16/2023"
-format: html
+format: docx
 execute:
   echo: false
   warning: false
@@ -298,7 +298,7 @@ standard_crop_wintri <- function() {
   l$ylim <- c(l$bottom, l$top)
   l
 }
-country_metadata <- wbstats::wbcountries()
+country_metadata <- read_csv(paste0(raw_dir, "country_metadata.csv"))
 
 spi_mapper <- function(data, indicator, title) {
   
@@ -394,7 +394,7 @@ spi_charts  <- function(data, indicator, title) {
   #by income
     income <- c("Low income", "Lower middle income","Upper middle income","High income")
     p3 <- map_df %>%
-    group_by(income) %>%
+    group_by(income_level) %>%
     filter(region!='Aggregates') %>%
     mutate(`SPI Score`=wtd.mean(data_available, weights=weights, na.rm=T),
            Label = paste(round(`SPI Score`,0))) %>%
@@ -495,6 +495,68 @@ spi_country_charts  <- function(data, indicator, title) {
             ) 
 p2_alt
 }
+
+
+spi_region_charts  <- function(data, indicator, title) {
+  
+    map_df <- get(data) %>%
+    filter(date==max(date, na.rm=T)) %>%
+    filter(!(country %in% c('Greenland'))) %>% #drop a few countries for which we do not collect data.
+    group_by( country) %>%
+    #summarise(across(!! indicator,last)) %>%
+    rename(data_available=!! indicator) %>%
+    select(iso3c, date, data_available, weights) %>%
+    right_join(country_metadata) %>%
+    mutate(data_available=if_else(is.na(data_available), as.numeric(NA), as.numeric(data_available)))  
+    
+    
+    
+    
+  #add histogram by region 
+  region_SPI_df <- map_df %>%
+    group_by(region) %>%
+    filter(region!='Aggregates') %>%
+    mutate(`SPI Score`=wtd.mean(data_available, weights = weights, na.rm=T),
+           Label = paste(round(`SPI Score`,0))) %>%
+    arrange(-`SPI Score`) 
+  
+  region_order <- c("Sub-Saharan Africa" ,
+                    "South Asia",
+                    "North America",
+                    "Middle East & North Africa",
+                    "Latin America & Caribbean",
+                    "Europe & Central Asia", 
+                    "East Asia & Pacific"
+                           )
+
+  region_SPI_df <- region_SPI_df %>%
+    mutate(region=factor(region, levels=region_order))
+  
+   p2 <-  ggplot(region_SPI_df, aes(x=`SPI Score`, y=region, fill=region)) +
+      geom_bar(stat="identity",position='dodge') +
+      geom_text(aes(label=Label)) +
+      labs(
+      title=str_wrap(paste(title, 'By Region', sep=" - "),100),
+      caption = 'Source: World Bank. Statistical Performance Indicators.',
+      subtitle= paste0('Based on data for ',end_date,' or the latest year available')
+      ) +
+      expand_limits(x=c(0,100)) +
+      theme_spi() +
+      theme(legend.position = 'top')
+
+
+  
+
+  print(p2)
+  
+
+
+    
+}
+
+
+
+
 income_charts <- function(data, indicator, title) { 
  indicator<-indicator
   map_df <- get(data) %>%
@@ -513,7 +575,7 @@ income_charts <- function(data, indicator, title) {
     filter(region!='Aggregates') %>%
     mutate(`SPI Score`=(data_available),
            Label = paste(round(`SPI Score`,0))) %>%
-    ggplot(aes(x=`SPI Score`, y=income, color=income)) +
+    ggplot(aes(x=`SPI Score`, y=income_level, color=income_level)) +
       geom_point() +
       geom_text(aes(label=country), position=position_jitter(width=.1,height=.4), check_overlap=T) +
       labs(
@@ -545,11 +607,11 @@ spi_income_aggregates <- function(data, indicator, title) {
   
     income <- c("Low income", "Lower middle income","Upper middle income","High income")
     p3 <- map_df %>%
-    group_by(income) %>%
+    group_by(income_level) %>%
     filter(region!='Aggregates') %>%
     mutate(`SPI Score`=wtd.mean(data_available, weights=weights, na.rm=T),
            Label = paste(round(`SPI Score`,0))) %>%
-    ggplot(aes(x=`SPI Score`, y=income, fill=income)) +
+    ggplot(aes(x=`SPI Score`, y=income_level, fill=income_level)) +
       geom_bar(stat="identity",position='dodge') +
       geom_text(aes(label=Label)) +
       labs(
@@ -1132,7 +1194,7 @@ lapply(unique(dat$Index), function(i) {
 ## Figure 3. Trends in Overall ODIN and SPI Scores, 2016-2022
 
 ```{r}
-#| label: volatilitydf
+#| label: volatilitydf1
 #read in ODIN data
 odin_df <- read_csv(paste0(output_dir, "/ODIN_formatted_data.csv")) 
 
@@ -1145,7 +1207,7 @@ volatility_df <- SPI %>%
 ```
 
 ```{r}
-#| label: volatilityplt1
+#| label: volatilityplt12
 
 volatility_scatter_df <- volatility_df %>%
   select(-country, income, region) %>% #avoid conflicts with naming/income groups
@@ -1224,7 +1286,7 @@ p1 <- ggplot(volatility_scatter_df, aes(x=value_2016, y=value_2022,color=indicat
 ```
 
 ```{r}
-#| label: volatilityplt2
+#| label: volatilityplt23
 #| fig-height: 8
 
 country_samp <- sample(unique(volatility_df$country),25)
@@ -1889,7 +1951,6 @@ gdb_reg_df <- read_csv(paste0(output_dir, "/GDB_formatted_data.csv")) %>%
 
 ```
 ```{r}
-#| label: loggdpspita
 
 
 #use modelsumary to predict
@@ -1975,7 +2036,6 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 ## Table A.9. Relationship between Government Effectiveness from Worldwide Governance Indicators and SPI scores, 2016-2022
 
 ```{r}
-#| label: gespi
 
 
 #create regression models
@@ -2052,7 +2112,6 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 ## Table A.10.  Relationship between the SDG Index Overall Score from the 2023 Sustainable Development Report and SPI scores, 2016-2022
 
 ```{r}
-#| label: sdgspireg
 
 #create regression models
  SDG_models <- list(
@@ -2128,7 +2187,6 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 ## Table A.11. Relationship between Log GDP per capita and ODIN, Open Data Barometer, and Global Data Barometer scores, 2016-2022
 
 ```{r}
-#| label: gdpotherindext
 #create regression models
  models <- list(
 
@@ -2207,7 +2265,6 @@ print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma
 ## Table A.12. Relationship between Government Effectiveness from Worldwide Governance Indicators and ODIN, Open Data Barometer, and Global Data Barometer scores, 2013-2022
 
 ```{r}
-#| label: geotherindext
 
 
 #create regression models
@@ -2287,7 +2344,6 @@ print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma
 ## Table A.13. Relationship between the SDG Index Overall Score from the 2023 Sustainable Development Report and ODIN, Open Data Barometer, and Global Data Barometer scores, 2013-2022
 
 ```{r}
-#| label: sdgt
 #create regression models
  models <- list(
 
@@ -2361,4 +2417,193 @@ print(paste0("ODB Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma
 
 p <- plm::plm(sdg_index_score ~  odb + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odb_reg_df, model='random') 
 print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+```
+
+## Figure A.1. SPI Score, by Region and Income
+
+Panel A. SPI Overall Score
+```{r}
+#| label: map
+#| fig-width: 9
+#| fig-height: 6
+#| 
+#show map and summary stats by region and income group
+
+spi_mapper('spi_index_df','SPI.INDEX','')
+
+```
+
+Panel B. SPI Overall Score by Region 
+
+```{r}
+#| label: spiregcharts
+#| fig-width: 9
+#| fig-height: 6
+
+
+
+spi_region_charts('spi_index_df','SPI.INDEX','SPI Overall Score')
+
+```
+
+Panel C. SPI Overall Score by Income Levels  
+
+```{r}
+#| label: spiincomecharts
+#| fig-width: 9
+#| fig-height: 6
+
+
+#show map and summary stats by region and income group
+
+spi_income_aggregates('spi_index_df','SPI.INDEX','SPI Overall Score')
+
+```
+
+## Figure A.2. SPI Overall Score by Country within Each Region
+
+```{r}
+#| label: spicountrycharts
+#| fig-width: 9
+#| fig-height: 6
+#| #show map and summary stats by region and income group
+
+spi_country_charts('spi_index_df','SPI.INDEX','SPI Overall Score')
+
+```
+
+## Figure A.3. Changes with the SPI Overall Score between 2016 and 2022
+
+```{r}
+#| label: elephant
+growth_plot <- function(variables, name) {
+  
+  elephant_df <- SPI %>%
+    rename(spi_data=!! variables) %>%
+    select(country, iso3c, date, spi_data) %>%
+    group_by(country, date) %>%
+    mutate(row = row_number()) %>%
+    pivot_wider(names_from=date,
+                names_prefix='spi_data_',
+                values_from=c('spi_data')) %>%
+    ungroup() %>%
+    mutate(growth=(spi_data_2022-spi_data_2016)) %>%
+    filter(!(is.na(spi_data_2022) | is.na(spi_data_2016))) %>%
+    mutate(spi_rank=100*rank(spi_data_2016)/length(spi_data_2016),
+           spi_bins=case_when( #calculate deciles
+             between(spi_rank,0,10) ~ "1st Decile",
+             between(spi_rank,10,20) ~ "2nd Decile",
+             between(spi_rank,20,30) ~ "3rd Decile",
+             between(spi_rank,30,40) ~ "4th Decile",
+             between(spi_rank,40,50) ~ "5th Decile",
+             between(spi_rank,50,60) ~ "6th Decile",
+             between(spi_rank,60,70) ~ "7th Decile",
+             between(spi_rank,70,80) ~ "8th Decile",
+             between(spi_rank,80,90) ~ "9th Decile",
+             between(spi_rank,90,100) ~ "Top Decile"
+           )) %>%
+    arrange(spi_rank)
+  
+  #summarise into decile bins
+  elephant_df <- elephant_df %>%
+    mutate(spi_bins=factor(spi_bins, levels=unique(elephant_df$spi_bins))) %>%
+    group_by(spi_bins) %>%
+    summarise(growth=mean(growth))
+  
+  ggplot(elephant_df, aes(x=spi_bins, y=growth, label=paste0(round(growth,1),""))) +
+    geom_segment(aes(xend=as.numeric(spi_bins)-0.5,x=as.numeric(spi_bins)+0.5, y=growth, yend=growth)) +
+    geom_point() +
+    geom_bar( stat = "identity", fill='#007f5f') +
+    ggrepel::geom_text_repel(nudge_y=0.1, size=4,segment.alpha =  0 ) +
+    scale_x_discrete() +
+    theme_spi() +
+    xlab(str_wrap('Decile in 2016',40)) +
+    ylab(str_wrap('Change in Score (2016-22)',20)) +
+    labs(
+      title=str_wrap("Countries in 2nd and 3rd deciles have grown most since 2016.",70),
+      subtitle=str_wrap('Change in SPI Overall Score from 2016-22 by 2016 decile group',70),
+      caption=paste0(name,' scale = 0 - 100 points.')
+    ) +
+    expand_limits(y=c(-2,10)) +
+    scale_alpha_continuous(
+      range=c(0.3,1)
+    ) +
+  theme(
+    axis.title.y = element_text(angle=0, vjust = 0.5),
+    text = element_text(size = 12),
+    title= element_text(size = 14),
+    legend.position = 'none'
+  )
+}
+# growth_plot('SPI.INDEX.PIL1', 'SPI Pillar 1 (Data Use) Score')
+# growth_plot('SPI.INDEX.PIL2', 'SPI Pillar 2 (Data Services) Score')
+# growth_plot('SPI.INDEX.PIL3', 'SPI Pillar 3 (Data Products) Score')
+# growth_plot('SPI.INDEX.PIL4', 'SPI Pillar 4 (Data Sources) Score')
+# growth_plot('SPI.INDEX.PIL5', 'SPI Pillar 5 (Data Infrastructure) Score')
+```
+
+```{r}
+#| label: elplot
+#| fig-height: 8
+#| fig-width: 12 
+growth_plot('SPI.INDEX', 'SPI Overall Score')
+```
+
+
+## Table B.1: Comparing the SPIs and the SCI 
+
+Table produced using Microsoft Word. 
+
+## Figure B.1:  Volatility of SPI and SCI Scores between 2016 and 2020
+
+```{r}
+#| label: volatilitydf
+
+
+#read in sci data
+sci_df <- read_csv(paste0(output_dir, "/SCI_formatted_data.csv"))
+
+
+volatility_df <- SPI %>%
+  left_join(sci_df) %>%
+  select(country, iso3c, date,income, region, SPI.INDEX, SCI) %>%
+  distinct()
+           
+  
+```
+
+```{r}
+#| label: volatilityplt1
+#| fig-height: 8
+#| fig-width: 12 
+
+
+volatility_scatter_df <- volatility_df %>%
+  filter(date==2016 | date==2020) %>%
+  as_tibble() %>%
+  pivot_longer(
+    cols=c('SPI.INDEX', 'SCI'),
+    names_to='indicator',
+    values_to='value'
+  ) %>%
+  pivot_wider(
+    values_from='value',
+    names_from='date',
+    names_prefix='value_'
+  ) %>%
+  mutate(indicator=case_when(
+    indicator=='SCI' ~ "SCI",
+    indicator=="SPI.INDEX" ~ "SPI Overall Score"
+  ))
+ggplot(volatility_scatter_df, aes(x=value_2016, y=value_2020, label=iso3c)) +
+  facet_wrap(~indicator) +
+  geom_text(color='#457b9d') +
+  # labs(
+  #   title='Volatility Between 2016 and 2020 for SCI and SPI Overall Scores'
+  # ) +
+  xlab('2016 value') +
+  ylab('2020 value') +
+  expand_limits(x=c(0,100), y=c(0,100)) +
+  theme_spi()
+    
 ```

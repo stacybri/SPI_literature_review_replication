@@ -107,6 +107,7 @@ metadata <- data.frame(
 #get list of country info
 country_list <- wbstats::wb_countries()
 
+write_excel_csv(country_list, paste0(raw_dir, "country_metadata.csv"))
 
 SPI_end_date <- spi_index_df %>%
   filter(date==end_date) %>%

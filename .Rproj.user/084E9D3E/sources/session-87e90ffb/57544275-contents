@@ -298,7 +298,7 @@ standard_crop_wintri <- function() {
   l$ylim <- c(l$bottom, l$top)
   l
 }
-country_metadata <- wbstats::wbcountries()
+country_metadata <- read_csv(paste0(raw_dir, "country_metadata.csv"))
 
 spi_mapper <- function(data, indicator, title) {
   
@@ -495,6 +495,68 @@ spi_country_charts  <- function(data, indicator, title) {
             ) 
 p2_alt
 }
+
+
+spi_region_charts  <- function(data, indicator, title) {
+  
+    map_df <- get(data) %>%
+    filter(date==max(date, na.rm=T)) %>%
+    filter(!(country %in% c('Greenland'))) %>% #drop a few countries for which we do not collect data.
+    group_by( country) %>%
+    #summarise(across(!! indicator,last)) %>%
+    rename(data_available=!! indicator) %>%
+    select(iso3c, date, data_available, weights) %>%
+    right_join(country_metadata) %>%
+    mutate(data_available=if_else(is.na(data_available), as.numeric(NA), as.numeric(data_available)))  
+    
+    
+    
+    
+  #add histogram by region 
+  region_SPI_df <- map_df %>%
+    group_by(region) %>%
+    filter(region!='Aggregates') %>%
+    mutate(`SPI Score`=wtd.mean(data_available, weights = weights, na.rm=T),
+           Label = paste(round(`SPI Score`,0))) %>%
+    arrange(-`SPI Score`) 
+  
+  region_order <- c("Sub-Saharan Africa" ,
+                    "South Asia",
+                    "North America",
+                    "Middle East & North Africa",
+                    "Latin America & Caribbean",
+                    "Europe & Central Asia", 
+                    "East Asia & Pacific"
+                           )
+
+  region_SPI_df <- region_SPI_df %>%
+    mutate(region=factor(region, levels=region_order))
+  
+   p2 <-  ggplot(region_SPI_df, aes(x=`SPI Score`, y=region, fill=region)) +
+      geom_bar(stat="identity",position='dodge') +
+      geom_text(aes(label=Label)) +
+      labs(
+      title=str_wrap(paste(title, 'By Region', sep=" - "),100),
+      caption = 'Source: World Bank. Statistical Performance Indicators.',
+      subtitle= paste0('Based on data for ',end_date,' or the latest year available')
+      ) +
+      expand_limits(x=c(0,100)) +
+      theme_spi() +
+      theme(legend.position = 'top')
+
+
+  
+
+  print(p2)
+  
+
+
+    
+}
+
+
+
+
 income_charts <- function(data, indicator, title) { 
  indicator<-indicator
   map_df <- get(data) %>%
@@ -2361,4 +2423,45 @@ print(paste0("ODB Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma
 
 p <- plm::plm(sdg_index_score ~  odb + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odb_reg_df, model='random') 
 print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+```
+
+## Figure A.1. SPI Score, by Region and Income
+
+Panel A. SPI Overall Score
+```{r}
+#| label: map
+#| fig-width: 9
+#| fig-height: 6
+#| 
+#show map and summary stats by region and income group
+
+spi_mapper('spi_index_df','SPI.INDEX','')
+
+```
+
+Panel B. SPI Overall Score by Region 
+
+```{r}
+#| label: spiregcharts
+#| fig-width: 9
+#| fig-height: 6
+
+
+
+spi_region_charts('spi_index_df','SPI.INDEX','SPI Overall Score')
+
+```
+
+Panel C. SPI Overall Score by Income Levels  
+
+```{r}
+#| label: spiincomecharts
+#| fig-width: 9
+#| fig-height: 6
+
+
+#show map and summary stats by region and income group
+
+spi_income_aggregates('spi_index_df','SPI.INDEX','SPI Overall Score')
+
 ```
