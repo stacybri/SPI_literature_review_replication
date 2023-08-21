@@ -22,7 +22,15 @@
 "0","  ) %>%"
 "0","  as.matrix() %>%"
 "0","  rcorr()"
-"0",""
+"2","Warning: Using an external vector in selections was deprecated in tidyselect 1.1.0.
+Please use `all_of()` or `any_of()` instead.
+# Was:
+data %>% select(sdgs)
+
+# Now:
+data %>% select(all_of(sdgs))
+
+See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>."
 "0","#get just pearon correlation"
 "0","index_cor <- index_cor_full$r"
 "0","index_cor <- index_cor[6:23,1:5]"

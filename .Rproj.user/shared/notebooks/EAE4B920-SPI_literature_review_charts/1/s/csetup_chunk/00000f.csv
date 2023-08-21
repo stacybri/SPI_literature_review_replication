@@ -97,8 +97,15 @@ Attaching package: ‘modelsummary’
 "
 "0","library(fixest) "
 "0","library(fmsb)"
-"0",""
-"0",""
+"0","library(lubridate)"
+"0","library(forecast)"
+"2","Registered S3 method overwritten by 'quantmod':
+  method            from
+  as.zoo.data.frame zoo 
+"
+"2","This is forecast 8.21 
+  Use suppressPackageStartupMessages() to eliminate package startup messages.
+"
 "0","dir <- here()"
 "0","raw_dir <- paste0(dir, ""/01_raw_data/"")"
 "0","output_dir <- paste(dir, '03_output', sep=""/"")"

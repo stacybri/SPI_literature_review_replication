@@ -30,7 +30,8 @@ library(readxl)
 library(extrafont)
 library(fixest) 
 library(fmsb)
-
+library(lubridate)
+library(forecast)
 
 dir <- here()
 raw_dir <- paste0(dir, "/01_raw_data/")
@@ -1191,12 +1192,9 @@ lapply(unique(dat$Index), function(i) {
 })
 ```
 
-## Figure 3. Trends in Overall ODIN and SPI Scores, 2016-2022
-
 ```{r}
 #| label: volatilitydf1
-#read in ODIN data
-odin_df <- read_csv(paste0(output_dir, "/ODIN_formatted_data.csv")) 
+odin_df <- read_csv(paste0(output_dir, "/ODIN_formatted_data.csv"))
 
 #combine spi with odin
 volatility_df <- SPI %>%
@@ -1205,6 +1203,208 @@ volatility_df <- SPI %>%
            
   
 ```
+
+
+## Measuring Country Progress over time
+
+```{r}
+#| label: country progress
+
+# this code will calculate trends based on the five years between 2016 and 2020 for the SPI and ODIN
+country_progress_data <- volatility_df %>%
+  filter(between(date, 2016,2022)) %>%
+  group_by(iso3c) %>%
+  filter(all(!is.na(SPI.INDEX))) %>%
+  filter(all(!is.na(ODIN_score)))
+
+
+#get trend data
+trend_data <- country_progress_data %>%
+  filter(between(date, 2016, 2020)) 
+
+#create trend model
+SPI_trend_models <- trend_data %>%
+  group_by(iso3c) %>%
+  do(model = lm(SPI.INDEX ~ date, data = .),
+     ) %>% 
+  ungroup()
+
+ODIN_trend_models <- trend_data %>%
+  group_by(iso3c) %>%
+  do(
+     model = lm(ODIN_score ~ date, data = .)) %>% 
+  ungroup()
+
+
+# get prediction data for 2021 and 2022
+prediction_data <- country_progress_data %>%
+  filter(between(date, 2021, 2022)) 
+
+# Predict using the fitted models
+SPI_prediction_data <- prediction_data %>%
+  left_join(SPI_trend_models, by = "iso3c") %>%
+  group_by(iso3c) %>%
+  do(modelr::add_predictions(., first(.$model), var="SPI_predicted_values")) %>%
+  select(-model)
+
+ODIN_prediction_data <- prediction_data %>%
+  left_join(ODIN_trend_models, by = "iso3c") %>%
+  group_by(iso3c) %>%
+  do(modelr::add_predictions(., first(.$model), var="ODIN_predicted_values")) %>%
+  select(-model)
+
+```
+
+This analysis explores countries that experienced large deviations from their country specific time trends in the year 2022 for both the SPI and ODIN indices.
+
+For each country, a country specific time trend was calculated using data for that country from 2016 to 2020.  This time trend was calculated using OLS regression of the index (SPI or ODIN as the case may be) on the year.  Each regression is calculated separately by country. A predicted value based on these regressions is then calculated for the year 2022.  
+
+A set of 15 countries that are the largest over-performers and 15 of the largest underperformers are shown below for each index.
+
+```{r}
+#| label: overunder
+#| fig-width: 9
+#| fig-height: 6
+
+#SPI overperformers
+spi_overperformers_df <- SPI_prediction_data %>%
+  filter(date==2022) %>%
+  mutate(resid=SPI.INDEX-SPI_predicted_values) %>%
+  arrange(-resid) %>%
+  head(15)
+
+spi_underperformers_df <- SPI_prediction_data %>%
+  filter(date==2022) %>%
+  mutate(resid=SPI.INDEX-SPI_predicted_values) %>%
+  arrange(resid) %>%
+  head(15)
+
+
+spi_overperformers_plot <-  spi_overperformers_df %>%
+  bind_rows(spi_underperformers_df) %>%
+  arrange(resid) 
+
+spi_overperformers_plot <- spi_overperformers_plot %>%
+  mutate(country=factor(country, levels=unique(spi_overperformers_plot$country)),
+         group=if_else(resid>=0, 'above','below')) %>%
+  ggplot(aes(x=country, y=resid, color=group)) +
+  geom_segment( aes(x=country ,xend=country, y=0, yend=resid), color="black") +
+  geom_point(size=3) +
+  scale_color_manual(name="",
+                     labels = c("Over-performers", "Under-performers"),
+                     values = c('above'="#1A9850", 'below'="#D73027")) +
+  coord_flip() +
+  theme_spi() +
+  theme(
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.y = element_blank(),
+    legend.position = 'bottom'
+  ) +
+  xlab("") +
+  ylab("SPI (deviation)") 
+
+# do same for ODIN
+odin_overperformers_df <- ODIN_prediction_data %>%
+  filter(date==2022) %>%
+  mutate(resid=ODIN_score-ODIN_predicted_values) %>%
+  arrange(-resid) %>%
+  head(15)
+
+odin_underperformers_df <- ODIN_prediction_data %>%
+  filter(date==2022) %>%
+  mutate(resid=ODIN_score-ODIN_predicted_values) %>%
+  arrange(resid) %>%
+  head(15)
+
+
+odin_overperformers_plot <-  odin_overperformers_df %>%
+  bind_rows(odin_underperformers_df) %>%
+  arrange(resid) 
+
+odin_overperformers_plot <- odin_overperformers_plot %>%
+  mutate(country=factor(country, levels=unique(odin_overperformers_plot$country)),
+         group=if_else(resid>=0, 'above','below')) %>%
+  ggplot(aes(x=country, y=resid, color=group)) +
+  geom_segment( aes(x=country ,xend=country, y=0, yend=resid), color="black") +
+  geom_point(size=3) +
+  scale_color_manual(name="",
+                     labels = c("Over-performers", "Under-performers"),
+                     values = c('above'="#1A9850", 'below'="#D73027")) +
+  coord_flip() +
+  theme_spi() +
+  theme(
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.y = element_blank(),
+    legend.position = 'none',
+  ) +
+  xlab("") +
+  ylab("ODIN (deviation)") 
+
+spi_overperformers_plot + odin_overperformers_plot +
+  plot_annotation(
+    # title='Top 15 Over/Under-Performers on SPI overall score compared to GDP per capita and Human Capital Index',
+                  caption=str_wrap('Over and under performers calculated by taking a country specific time trend using OLS regression of SPI overall score or ODIN score on the year using data from 2016 to 2020 and calculting residuals from this regression in 2022.',100)
+                  )
+```
+
+```{r}
+
+#create table
+spi_overunder_table <- spi_overperformers_df %>%
+  bind_rows(spi_underperformers_df) %>%
+  arrange(-resid)  %>%
+  mutate(resid=round(resid,1)) %>%
+  rename(`SPI Difference`=resid,
+         `SPI Country`=country) %>%
+  ungroup() %>%
+  select(`SPI Country`, `SPI Difference`)
+
+odin_overunder_table <- odin_overperformers_df %>%
+  bind_rows(odin_underperformers_df) %>%
+  mutate(resid=round(resid,1)) %>%
+  arrange(-resid)  %>%
+  rename(`ODIN Difference`=resid,
+         `ODIN Country`=country) %>%
+  ungroup() %>%
+  select(`ODIN Country`, `ODIN Difference`)
+
+overunder_tab <- cbind(spi_overunder_table, odin_overunder_table)
+
+flextable(overunder_tab
+            ) %>%
+  add_header_lines('SPI and ODIN Over/Under-performers in 2022 compared to country time trend from 2016 to 2020.')
+  
+
+```
+
+```{r}
+#get absolute deviation and correlation
+
+spi_performers_df <- SPI_prediction_data %>%
+  filter(date==2022) %>%
+  mutate(spi_resid=SPI.INDEX-SPI_predicted_values)
+
+#mean absolute deviation
+mean(abs(spi_performers_df$spi_resid))
+
+odin_performers_df <- ODIN_prediction_data %>%
+  filter(date==2022) %>%
+  mutate(odin_resid=ODIN_score-ODIN_predicted_values)
+
+#mean absolute deviation
+mean(abs(odin_performers_df$odin_resid))
+
+
+performers_df <- spi_performers_df %>%
+  left_join(odin_performers_df)
+
+cor(performers_df$spi_resid, performers_df$odin_resid)
+```
+
+
+## Figure 3. Trends in Overall ODIN and SPI Scores, 2016-2022
+
+
 
 ```{r}
 #| label: volatilityplt12
