@@ -353,6 +353,7 @@ sdg_names <- c('SDG 1: Extreme Poverty','SDG 2: Undernourishment','SDG 3: Matern
 ```
 
 
+
 ```{r comparison, include=FALSE}
 
 
@@ -516,13 +517,1176 @@ write_excel_csv(comparison_df, paste0(output_dir, "/SPI_Index_SDG_comparisons_da
 ```
 
 
+Do the same thing, but instead of latest year of data available take the average of 5 preceding years.
+
+
+```{r correlates5avg}
+
+#instead of the latest value, take the 5 year average
+
+start_date=2010
+
+correlates_df <- wb_data(country="all", 
+              indicator=c('SI.POV.DDAY', 'SI.POV.GINI'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(country) %>%
+  right_join(spi_df_empty) %>%
+  group_by(iso3c, country, region, income, lending) %>%
+  fill(c('SI.POV.DDAY', 'SI.POV.GINI'), .direction = 'downup') %>%
+  filter(date>=(end_date-4)) %>% #take 5 latest years
+  summarise(across(c('SI.POV.DDAY', 'SI.POV.GINI'), mean, na.rm=TRUE))  %>%
+  mutate(date=end_date)
+
+
+ge_df <- wb_data(country="all", 
+              indicator=c('GE.EST'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('GE.EST'), .direction = 'downup') %>%
+  filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('GE.EST'), mean, na.rm=TRUE)) %>%
+  select(iso3c, GE.EST)
+
+gdp_df <- wb_data(country="all", 
+              indicator=c('NY.GDP.PCAP.KD'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('NY.GDP.PCAP.KD'), .direction = 'downup') %>%
+  filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('NY.GDP.PCAP.KD'), mean, na.rm=TRUE)) %>%
+  select(iso3c, NY.GDP.PCAP.KD)
+
+hci_df <- wb_data(country="all", 
+              indicator=c('HD.HCI.OVRL'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('HD.HCI.OVRL'), .direction = 'downup') %>%
+   filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('HD.HCI.OVRL'), mean, na.rm=TRUE))  %>%
+  select(iso3c, HD.HCI.OVRL)
+
+undernourish_df <- wb_data(country="all", 
+              indicator=c('SN.ITK.DEFC.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SN.ITK.DEFC.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('SN.ITK.DEFC.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, SN.ITK.DEFC.ZS)
+
+mmt_df <-  wb_data(country="all", 
+              indicator=c('SH.STA.MMRT'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SH.STA.MMRT'), .direction = 'downup') %>%
+  filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('SH.STA.MMRT'), mean, na.rm=TRUE)) %>%
+  select(iso3c,  SH.STA.MMRT)
+
+
+lpov_df <-  wb_data(country="all", 
+              indicator=c('SE.LPV.PRIM'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SE.LPV.PRIM'), .direction = 'downup') %>%
+  filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('SE.LPV.PRIM'), mean, na.rm=TRUE))  %>%
+  select(iso3c, SE.LPV.PRIM)  
+
+
+wbl_df <- wb_data(country="all", 
+              indicator=c('SG.LAW.INDX'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SG.LAW.INDX'), .direction = 'downup') %>%
+  filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('SG.LAW.INDX'), mean, na.rm=TRUE)) %>%
+  select(iso3c,  SG.LAW.INDX)
+
+safely_df <- wb_data(country="all", 
+              indicator=c('SH.H2O.SMDW.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SH.H2O.SMDW.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('SH.H2O.SMDW.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, SH.H2O.SMDW.ZS)
+  
+elect_df <- wb_data(country="all", 
+              indicator=c('EG.ELC.ACCS.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('EG.ELC.ACCS.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('EG.ELC.ACCS.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, EG.ELC.ACCS.ZS)
+  
+manuf_df <- wb_data(country="all", 
+              indicator=c('NV.IND.MANF.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('NV.IND.MANF.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('NV.IND.MANF.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, NV.IND.MANF.ZS)
+
+
+slums_df <- wb_data(country="all", 
+              indicator=c('EN.POP.SLUM.UR.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('EN.POP.SLUM.UR.ZS'), .direction = 'downup') %>%
+    filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('EN.POP.SLUM.UR.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c,  EN.POP.SLUM.UR.ZS)
+
+ff_sub_df <- read_csv(paste0(raw_dir, "/Subsidies.csv")) %>%
+  rename(iso3c=code)
+  
+
+ghg_df <- wb_data(country="all", 
+              indicator=c('EN.ATM.GHGT.KT.CE'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('EN.ATM.GHGT.KT.CE'), .direction = 'downup') %>%
+  filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('EN.ATM.GHGT.KT.CE'), mean, na.rm=TRUE)) %>%
+  select(iso3c,  EN.ATM.GHGT.KT.CE)
+
+protected_df <- wb_data(country="all", 
+              indicator=c('ER.MRN.PTMR.ZS','ER.LND.PTLD.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  fill(c('ER.MRN.PTMR.ZS','ER.LND.PTLD.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('ER.MRN.PTMR.ZS', 'ER.LND.PTLD.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, ER.MRN.PTMR.ZS,ER.LND.PTLD.ZS)
+
+debt_df <- wb_data(country="all", 
+              indicator=c('DT.TDS.DECT.EX.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  fill(c('DT.TDS.DECT.EX.ZS'), .direction = 'downup') %>%
+
+  filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('DT.TDS.DECT.EX.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, DT.TDS.DECT.EX.ZS)
+
+#bring in Sachs SDG index
+#https://dashboards.sdgindex.org/explorer
+# accessed on 2023-07-20
+
+sdg_index <- read_excel(path=paste0(raw_dir, "/SDR2023-data.xlsx"),
+                        sheet='Backdated SDG Index'
+) %>%
+  transmute(iso3c=`Country Code ISO3`,
+         date=year,
+         sdg_index_score=`SDG Index Score`) %>%
+  group_by(iso3c) %>%
+  fill(c('sdg_index_score'), .direction = 'downup') %>%
+  filter(date>=end_date-4) %>% #take 5 latest years
+  summarise(across(c('sdg_index_score'), mean, na.rm=TRUE)) %>%
+  select(iso3c, sdg_index_score)
+
+#bring it all together
+correlates_df_avg <- correlates_df %>%
+  left_join(ge_df) %>%
+  left_join(gdp_df) %>%
+  left_join(hci_df) %>%
+  left_join(undernourish_df) %>%
+  left_join(mmt_df) %>%
+  left_join(lpov_df) %>%
+  left_join(wbl_df) %>%
+  left_join(safely_df) %>%
+  left_join(elect_df) %>%
+  left_join(manuf_df) %>%
+  left_join(slums_df) %>%
+  left_join(ff_sub_df) %>%
+  left_join(ghg_df) %>%
+  left_join(protected_df) %>%
+  left_join(debt_df) %>%
+  left_join(sdg_index) %>%
+  filter(region!="Aggregates") %>%
+  select(iso3c, c('SI.POV.DDAY', 'SI.POV.GINI','GE.EST','NY.GDP.PCAP.KD','HD.HCI.OVRL','SN.ITK.DEFC.ZS','SH.STA.MMRT','SE.LPV.PRIM','SG.LAW.INDX','SH.H2O.SMDW.ZS',"EG.ELC.ACCS.ZS",'NV.IND.MANF.ZS','EN.POP.SLUM.UR.ZS','subsidies','EN.ATM.GHGT.KT.CE','ER.MRN.PTMR.ZS','ER.LND.PTLD.ZS','DT.TDS.DECT.EX.ZS', 'sdg_index_score'))
+
+
+```
+
+```{r comparison5avg, include=FALSE}
 
 
 
+#pull SCI values
+
+sci_df <- read_excel(paste0(raw_dir, "Statistical_Capacity_Indicators.xlsx")) %>%
+  mutate(YR2004=as.numeric(YR2004),
+         iso3c=`Country Code`) %>%
+  filter(`Series Code`=="IQ.SCI.OVRL") %>%
+  select(-`Country Code`, -`Series Code`) %>%
+  pivot_longer(
+    cols=c(YR2004:YR2020),
+    names_to='YR',
+    values_to='SCI'
+  ) %>%
+  mutate(date=str_remove_all(YR,"YR"),
+         date=as.numeric(date)) %>%
+  select(iso3c, date, SCI)
+  
+  
+  
+
+# onvert it to a data frame.
+sci_df <- sci_df %>%
+  left_join(spi_df_empty) %>% #add on country metadata
+  filter(!is.na(income)) %>%
+  select(iso3c, date, SCI  ) %>%
+  group_by(date) %>%
+  arrange(-SCI) %>%
+  mutate(SCI_rank=rank(-SCI),
+         SCI_rank=if_else(is.na(SCI),as.numeric(NA),SCI_rank)) %>%
+  group_by(iso3c) %>%
+  filter(between(date, 2016,2020)) %>%
+  summarise(across(starts_with("SCI"), mean, na.rm=TRUE))
+
+
+#read in ODIN data
+  for (i in c(2015,2016,2017,2018,2020,2022)) {
+   temp <- read_csv(paste(raw_dir, '/','ODIN_',i,'.csv', sep=""))  %>%
+        as_tibble(.name_repair = 'universal') %>%
+        mutate(date=i) %>%
+        filter(Data.categories=='All Categories') %>%
+        select(-Year)
+
+
+    assign(paste('odin_df',i,sep="_"), temp)
+  }
+
+    #bind different years together
+odin_df <- bind_rows(odin_df_2015, odin_df_2016, odin_df_2017, odin_df_2018, odin_df_2020, odin_df_2022)
+
+
+odin_df <- odin_df %>%
+    select(Country.Code, date, Overall.score) %>%
+    rename(iso3c=Country.Code,
+           ODIN_score=Overall.score) %>%
+    group_by(date) %>%
+    arrange(-ODIN_score) %>%
+    mutate(ODIN_rank=rank(-ODIN_score, na.last='NA')) %>% 
+  right_join(spi_df_empty) %>%
+  arrange(country, date) %>%
+  group_by(country) %>%
+  mutate(across(starts_with("ODIN"), na.locf, na.rm=FALSE)) %>%
+  left_join(wbstats::wb_countries()) %>%
+  group_by(iso3c) %>%
+  filter(between(date, 2018,2022)) %>%
+  summarise(across(starts_with("ODIN"), mean, na.rm=TRUE))
+
+#read in the ODB
+odb_df_2017 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2017-Rankings') %>%
+  transmute(
+    iso3c=ISO3,
+    odb=`ODB-Score`
+  )
+
+
+odb_df_2016_info <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2016-Rankings') %>%
+  select(ISO3, Country) 
+
+odb_df_2016 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2016-Absolute-Recalculated') %>%
+  left_join(odb_df_2016_info) %>%
+  transmute(
+    iso3c=ISO3,
+    odb_2016=`ODB Score (0-100)`
+  )
+
+odb_df_2015 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2015-Rankings')
+odb_df_2014 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2014-Rankings')
+odb_df_2013 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2013-Rankings')
+
+odb_df <- bind_rows(
+  (odb_df_2017 %>% mutate(date=2017)),
+  (odb_df_2016 %>% mutate(date=2016, odb=odb_2016)),
+  (odb_df_2015 %>% mutate(date=2015, iso3c=ISO3, odb=`ODB-Score-Scaled`)),
+  (odb_df_2014 %>% mutate(date=2014, iso3c=ISO3, odb=`ODB-Score-Scaled`)),
+  (odb_df_2013 %>% mutate(date=2013, iso3c=ISO3, odb=`ODB-Score-Scaled`)),
+  ) %>%
+  select(iso3c, date, odb) %>%
+  left_join(country_list) %>%
+  group_by(iso3c) %>%
+  summarise(across(starts_with("odb"), mean, na.rm=TRUE))
+
+
+#read in the GDB
+gdb_df <- read_csv(paste0(raw_dir, "/global-data-barometer-topic--all-countries.csv")) %>%
+  transmute(iso3c=iso,
+            gdb=`GDB 2021 score`)
 
 
 
+#IIAG
+iiag_df <- read_csv(paste0(raw_dir, "/2022 IIAG_Scores.csv")) %>%
+  transmute(
+    iso2c=Country_ISO,
+    iiag_overall=`OVERALL GOVERNANCE`,
+    iiag_stats=`Capacity of the Statistical System`,
+    date=Year
+  ) %>%
+  left_join(country_list) %>%
+  group_by(iso3c) %>%
+  filter(between(date, 2018,2022)) %>%
+  summarise(across(c('iiag_overall','iiag_stats'), mean, na.rm=TRUE)) %>%
+  select(iso3c,iiag_overall,iiag_stats )
+  
 
+
+#create one database
+comparison_avg_df <- spi_index_df %>%
+  ungroup() %>%
+  group_by(iso3c) %>%
+  filter(between(date, 2018,2022)) %>%
+  summarise(across(starts_with("SPI.INDEX"), mean, na.rm=TRUE)) %>%
+  arrange(-SPI.INDEX) %>%
+  mutate(across(starts_with('SPI.INDEX'),~1*.),
+         across(starts_with('SPI.INDEX'),round,1)) %>%
+  select(iso3c, SPI.INDEX) %>%
+  left_join(sci_df) %>%
+  left_join(odin_df) %>%
+  left_join(odb_df) %>%
+  left_join(gdb_df) %>%
+  left_join(iiag_df) %>%
+  left_join(correlates_df_avg) 
+
+#save to output
+write_excel_csv(comparison_avg_df, paste0(output_dir, "/SPI_Index_SDG_comparisons_data_5yr_avg.csv"))
+
+
+```
+
+Now do a three year average.
+
+```{r correlates3avg}
+
+#instead of the latest value, take the 5 year average
+
+start_date=2010
+
+correlates_df <- wb_data(country="all", 
+              indicator=c('SI.POV.DDAY', 'SI.POV.GINI'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(country) %>%
+  right_join(spi_df_empty) %>%
+  group_by(iso3c, country, region, income, lending) %>%
+  fill(c('SI.POV.DDAY', 'SI.POV.GINI'), .direction = 'downup') %>%
+  filter(date>=(end_date-2)) %>% #take 5 latest years
+  summarise(across(c('SI.POV.DDAY', 'SI.POV.GINI'), mean, na.rm=TRUE))  %>%
+  mutate(date=end_date)
+
+
+ge_df <- wb_data(country="all", 
+              indicator=c('GE.EST'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('GE.EST'), .direction = 'downup') %>%
+  filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('GE.EST'), mean, na.rm=TRUE)) %>%
+  select(iso3c, GE.EST)
+
+gdp_df <- wb_data(country="all", 
+              indicator=c('NY.GDP.PCAP.KD'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('NY.GDP.PCAP.KD'), .direction = 'downup') %>%
+  filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('NY.GDP.PCAP.KD'), mean, na.rm=TRUE)) %>%
+  select(iso3c, NY.GDP.PCAP.KD)
+
+hci_df <- wb_data(country="all", 
+              indicator=c('HD.HCI.OVRL'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('HD.HCI.OVRL'), .direction = 'downup') %>%
+   filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('HD.HCI.OVRL'), mean, na.rm=TRUE))  %>%
+  select(iso3c, HD.HCI.OVRL)
+
+undernourish_df <- wb_data(country="all", 
+              indicator=c('SN.ITK.DEFC.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SN.ITK.DEFC.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('SN.ITK.DEFC.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, SN.ITK.DEFC.ZS)
+
+mmt_df <-  wb_data(country="all", 
+              indicator=c('SH.STA.MMRT'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SH.STA.MMRT'), .direction = 'downup') %>%
+  filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('SH.STA.MMRT'), mean, na.rm=TRUE)) %>%
+  select(iso3c,  SH.STA.MMRT)
+
+
+lpov_df <-  wb_data(country="all", 
+              indicator=c('SE.LPV.PRIM'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SE.LPV.PRIM'), .direction = 'downup') %>%
+  filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('SE.LPV.PRIM'), mean, na.rm=TRUE))  %>%
+  select(iso3c, SE.LPV.PRIM)  
+
+
+wbl_df <- wb_data(country="all", 
+              indicator=c('SG.LAW.INDX'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SG.LAW.INDX'), .direction = 'downup') %>%
+  filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('SG.LAW.INDX'), mean, na.rm=TRUE)) %>%
+  select(iso3c,  SG.LAW.INDX)
+
+safely_df <- wb_data(country="all", 
+              indicator=c('SH.H2O.SMDW.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SH.H2O.SMDW.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('SH.H2O.SMDW.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, SH.H2O.SMDW.ZS)
+  
+elect_df <- wb_data(country="all", 
+              indicator=c('EG.ELC.ACCS.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('EG.ELC.ACCS.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('EG.ELC.ACCS.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, EG.ELC.ACCS.ZS)
+  
+manuf_df <- wb_data(country="all", 
+              indicator=c('NV.IND.MANF.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('NV.IND.MANF.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('NV.IND.MANF.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, NV.IND.MANF.ZS)
+
+
+slums_df <- wb_data(country="all", 
+              indicator=c('EN.POP.SLUM.UR.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('EN.POP.SLUM.UR.ZS'), .direction = 'downup') %>%
+    filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('EN.POP.SLUM.UR.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c,  EN.POP.SLUM.UR.ZS)
+
+ff_sub_df <- read_csv(paste0(raw_dir, "/Subsidies.csv")) %>%
+  rename(iso3c=code)
+  
+
+ghg_df <- wb_data(country="all", 
+              indicator=c('EN.ATM.GHGT.KT.CE'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('EN.ATM.GHGT.KT.CE'), .direction = 'downup') %>%
+  filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('EN.ATM.GHGT.KT.CE'), mean, na.rm=TRUE)) %>%
+  select(iso3c,  EN.ATM.GHGT.KT.CE)
+
+protected_df <- wb_data(country="all", 
+              indicator=c('ER.MRN.PTMR.ZS','ER.LND.PTLD.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  fill(c('ER.MRN.PTMR.ZS','ER.LND.PTLD.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('ER.MRN.PTMR.ZS', 'ER.LND.PTLD.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, ER.MRN.PTMR.ZS,ER.LND.PTLD.ZS)
+
+debt_df <- wb_data(country="all", 
+              indicator=c('DT.TDS.DECT.EX.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  fill(c('DT.TDS.DECT.EX.ZS'), .direction = 'downup') %>%
+
+  filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('DT.TDS.DECT.EX.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, DT.TDS.DECT.EX.ZS)
+
+#bring in Sachs SDG index
+#https://dashboards.sdgindex.org/explorer
+# accessed on 2023-07-20
+
+sdg_index <- read_excel(path=paste0(raw_dir, "/SDR2023-data.xlsx"),
+                        sheet='Backdated SDG Index'
+) %>%
+  transmute(iso3c=`Country Code ISO3`,
+         date=year,
+         sdg_index_score=`SDG Index Score`) %>%
+  group_by(iso3c) %>%
+  fill(c('sdg_index_score'), .direction = 'downup') %>%
+  filter(date>=end_date-2) %>% #take 5 latest years
+  summarise(across(c('sdg_index_score'), mean, na.rm=TRUE)) %>%
+  select(iso3c, sdg_index_score)
+
+#bring it all together
+correlates_df_avg <- correlates_df %>%
+  left_join(ge_df) %>%
+  left_join(gdp_df) %>%
+  left_join(hci_df) %>%
+  left_join(undernourish_df) %>%
+  left_join(mmt_df) %>%
+  left_join(lpov_df) %>%
+  left_join(wbl_df) %>%
+  left_join(safely_df) %>%
+  left_join(elect_df) %>%
+  left_join(manuf_df) %>%
+  left_join(slums_df) %>%
+  left_join(ff_sub_df) %>%
+  left_join(ghg_df) %>%
+  left_join(protected_df) %>%
+  left_join(debt_df) %>%
+  left_join(sdg_index) %>%
+  filter(region!="Aggregates") %>%
+  select(iso3c, c('SI.POV.DDAY', 'SI.POV.GINI','GE.EST','NY.GDP.PCAP.KD','HD.HCI.OVRL','SN.ITK.DEFC.ZS','SH.STA.MMRT','SE.LPV.PRIM','SG.LAW.INDX','SH.H2O.SMDW.ZS',"EG.ELC.ACCS.ZS",'NV.IND.MANF.ZS','EN.POP.SLUM.UR.ZS','subsidies','EN.ATM.GHGT.KT.CE','ER.MRN.PTMR.ZS','ER.LND.PTLD.ZS','DT.TDS.DECT.EX.ZS', 'sdg_index_score'))
+
+
+```
+
+```{r comparison3avg, include=FALSE}
+
+
+
+#pull SCI values
+
+sci_df <- read_excel(paste0(raw_dir, "Statistical_Capacity_Indicators.xlsx")) %>%
+  mutate(YR2004=as.numeric(YR2004),
+         iso3c=`Country Code`) %>%
+  filter(`Series Code`=="IQ.SCI.OVRL") %>%
+  select(-`Country Code`, -`Series Code`) %>%
+  pivot_longer(
+    cols=c(YR2004:YR2020),
+    names_to='YR',
+    values_to='SCI'
+  ) %>%
+  mutate(date=str_remove_all(YR,"YR"),
+         date=as.numeric(date)) %>%
+  select(iso3c, date, SCI)
+  
+  
+  
+
+# onvert it to a data frame.
+sci_df <- sci_df %>%
+  left_join(spi_df_empty) %>% #add on country metadata
+  filter(!is.na(income)) %>%
+  select(iso3c, date, SCI  ) %>%
+  group_by(date) %>%
+  arrange(-SCI) %>%
+  mutate(SCI_rank=rank(-SCI),
+         SCI_rank=if_else(is.na(SCI),as.numeric(NA),SCI_rank)) %>%
+  group_by(iso3c) %>%
+  filter(between(date, 2018,2020)) %>%
+  summarise(across(starts_with("SCI"), mean, na.rm=TRUE))
+
+
+#read in ODIN data
+  for (i in c(2015,2016,2017,2018,2020,2022)) {
+   temp <- read_csv(paste(raw_dir, '/','ODIN_',i,'.csv', sep=""))  %>%
+        as_tibble(.name_repair = 'universal') %>%
+        mutate(date=i) %>%
+        filter(Data.categories=='All Categories') %>%
+        select(-Year)
+
+
+    assign(paste('odin_df',i,sep="_"), temp)
+  }
+
+    #bind different years together
+odin_df <- bind_rows(odin_df_2015, odin_df_2016, odin_df_2017, odin_df_2018, odin_df_2020, odin_df_2022)
+
+
+odin_df <- odin_df %>%
+    select(Country.Code, date, Overall.score) %>%
+    rename(iso3c=Country.Code,
+           ODIN_score=Overall.score) %>%
+    group_by(date) %>%
+    arrange(-ODIN_score) %>%
+    mutate(ODIN_rank=rank(-ODIN_score, na.last='NA')) %>% 
+  right_join(spi_df_empty) %>%
+  arrange(country, date) %>%
+  group_by(country) %>%
+  mutate(across(starts_with("ODIN"), na.locf, na.rm=FALSE)) %>%
+  left_join(wbstats::wb_countries()) %>%
+  group_by(iso3c) %>%
+  filter(between(date, 2020,2022)) %>%
+  summarise(across(starts_with("ODIN"), mean, na.rm=TRUE))
+
+#read in the ODB
+odb_df_2017 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2017-Rankings') %>%
+  transmute(
+    iso3c=ISO3,
+    odb=`ODB-Score`
+  )
+
+
+odb_df_2016_info <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2016-Rankings') %>%
+  select(ISO3, Country) 
+
+odb_df_2016 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2016-Absolute-Recalculated') %>%
+  left_join(odb_df_2016_info) %>%
+  transmute(
+    iso3c=ISO3,
+    odb_2016=`ODB Score (0-100)`
+  )
+
+odb_df_2015 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2015-Rankings')
+odb_df_2014 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2014-Rankings')
+odb_df_2013 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2013-Rankings')
+
+odb_df <- bind_rows(
+  (odb_df_2017 %>% mutate(date=2017)),
+  (odb_df_2016 %>% mutate(date=2016, odb=odb_2016)),
+  (odb_df_2015 %>% mutate(date=2015, iso3c=ISO3, odb=`ODB-Score-Scaled`))
+  ) %>%
+  select(iso3c, date, odb) %>%
+  left_join(country_list) %>%
+  group_by(iso3c) %>%
+  summarise(across(starts_with("odb"), mean, na.rm=TRUE))
+
+
+#read in the GDB
+gdb_df <- read_csv(paste0(raw_dir, "/global-data-barometer-topic--all-countries.csv")) %>%
+  transmute(iso3c=iso,
+            gdb=`GDB 2021 score`)
+
+
+
+#IIAG
+iiag_df <- read_csv(paste0(raw_dir, "/2022 IIAG_Scores.csv")) %>%
+  transmute(
+    iso2c=Country_ISO,
+    iiag_overall=`OVERALL GOVERNANCE`,
+    iiag_stats=`Capacity of the Statistical System`,
+    date=Year
+  ) %>%
+  left_join(country_list) %>%
+  group_by(iso3c) %>%
+  filter(between(date, 2020,2022)) %>%
+  summarise(across(c('iiag_overall','iiag_stats'), mean, na.rm=TRUE)) %>%
+  select(iso3c,iiag_overall,iiag_stats )
+  
+
+
+#create one database
+comparison_avg_df <- spi_index_df %>%
+  ungroup() %>%
+  group_by(iso3c) %>%
+  filter(between(date, 2020,2022)) %>%
+  summarise(across(starts_with("SPI.INDEX"), mean, na.rm=TRUE)) %>%
+  arrange(-SPI.INDEX) %>%
+  mutate(across(starts_with('SPI.INDEX'),~1*.),
+         across(starts_with('SPI.INDEX'),round,1)) %>%
+  select(iso3c, SPI.INDEX) %>%
+  left_join(sci_df) %>%
+  left_join(odin_df) %>%
+  left_join(odb_df) %>%
+  left_join(gdb_df) %>%
+  left_join(iiag_df) %>%
+  left_join(correlates_df_avg) 
+
+#save to output
+write_excel_csv(comparison_avg_df, paste0(output_dir, "/SPI_Index_SDG_comparisons_data_3yr_avg.csv"))
+
+
+```
+
+Two year average
+
+```{r correlates2avg}
+
+#instead of the latest value, take the 5 year average
+
+start_date=2010
+
+correlates_df <- wb_data(country="all", 
+              indicator=c('SI.POV.DDAY', 'SI.POV.GINI'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(country) %>%
+  right_join(spi_df_empty) %>%
+  group_by(iso3c, country, region, income, lending) %>%
+  fill(c('SI.POV.DDAY', 'SI.POV.GINI'), .direction = 'downup') %>%
+  filter(date>=(end_date-1)) %>% #take 5 latest years
+  summarise(across(c('SI.POV.DDAY', 'SI.POV.GINI'), mean, na.rm=TRUE))  %>%
+  mutate(date=end_date)
+
+
+ge_df <- wb_data(country="all", 
+              indicator=c('GE.EST'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('GE.EST'), .direction = 'downup') %>%
+  filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('GE.EST'), mean, na.rm=TRUE)) %>%
+  select(iso3c, GE.EST)
+
+gdp_df <- wb_data(country="all", 
+              indicator=c('NY.GDP.PCAP.KD'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('NY.GDP.PCAP.KD'), .direction = 'downup') %>%
+  filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('NY.GDP.PCAP.KD'), mean, na.rm=TRUE)) %>%
+  select(iso3c, NY.GDP.PCAP.KD)
+
+hci_df <- wb_data(country="all", 
+              indicator=c('HD.HCI.OVRL'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('HD.HCI.OVRL'), .direction = 'downup') %>%
+   filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('HD.HCI.OVRL'), mean, na.rm=TRUE))  %>%
+  select(iso3c, HD.HCI.OVRL)
+
+undernourish_df <- wb_data(country="all", 
+              indicator=c('SN.ITK.DEFC.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SN.ITK.DEFC.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('SN.ITK.DEFC.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, SN.ITK.DEFC.ZS)
+
+mmt_df <-  wb_data(country="all", 
+              indicator=c('SH.STA.MMRT'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SH.STA.MMRT'), .direction = 'downup') %>%
+  filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('SH.STA.MMRT'), mean, na.rm=TRUE)) %>%
+  select(iso3c,  SH.STA.MMRT)
+
+
+lpov_df <-  wb_data(country="all", 
+              indicator=c('SE.LPV.PRIM'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SE.LPV.PRIM'), .direction = 'downup') %>%
+  filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('SE.LPV.PRIM'), mean, na.rm=TRUE))  %>%
+  select(iso3c, SE.LPV.PRIM)  
+
+
+wbl_df <- wb_data(country="all", 
+              indicator=c('SG.LAW.INDX'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SG.LAW.INDX'), .direction = 'downup') %>%
+  filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('SG.LAW.INDX'), mean, na.rm=TRUE)) %>%
+  select(iso3c,  SG.LAW.INDX)
+
+safely_df <- wb_data(country="all", 
+              indicator=c('SH.H2O.SMDW.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('SH.H2O.SMDW.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('SH.H2O.SMDW.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, SH.H2O.SMDW.ZS)
+  
+elect_df <- wb_data(country="all", 
+              indicator=c('EG.ELC.ACCS.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('EG.ELC.ACCS.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('EG.ELC.ACCS.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, EG.ELC.ACCS.ZS)
+  
+manuf_df <- wb_data(country="all", 
+              indicator=c('NV.IND.MANF.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('NV.IND.MANF.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('NV.IND.MANF.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, NV.IND.MANF.ZS)
+
+
+slums_df <- wb_data(country="all", 
+              indicator=c('EN.POP.SLUM.UR.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('EN.POP.SLUM.UR.ZS'), .direction = 'downup') %>%
+    filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('EN.POP.SLUM.UR.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c,  EN.POP.SLUM.UR.ZS)
+
+ff_sub_df <- read_csv(paste0(raw_dir, "/Subsidies.csv")) %>%
+  rename(iso3c=code)
+  
+
+ghg_df <- wb_data(country="all", 
+              indicator=c('EN.ATM.GHGT.KT.CE'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  right_join(spi_df_empty) %>%
+  fill(c('EN.ATM.GHGT.KT.CE'), .direction = 'downup') %>%
+  filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('EN.ATM.GHGT.KT.CE'), mean, na.rm=TRUE)) %>%
+  select(iso3c,  EN.ATM.GHGT.KT.CE)
+
+protected_df <- wb_data(country="all", 
+              indicator=c('ER.MRN.PTMR.ZS','ER.LND.PTLD.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  fill(c('ER.MRN.PTMR.ZS','ER.LND.PTLD.ZS'), .direction = 'downup') %>%
+  filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('ER.MRN.PTMR.ZS', 'ER.LND.PTLD.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, ER.MRN.PTMR.ZS,ER.LND.PTLD.ZS)
+
+debt_df <- wb_data(country="all", 
+              indicator=c('DT.TDS.DECT.EX.ZS'),
+              start_date=start_date,
+              end_date=end_date,
+              ) %>% # fill forward 
+  group_by(iso3c) %>%
+  fill(c('DT.TDS.DECT.EX.ZS'), .direction = 'downup') %>%
+
+  filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('DT.TDS.DECT.EX.ZS'), mean, na.rm=TRUE)) %>%
+  select(iso3c, DT.TDS.DECT.EX.ZS)
+
+#bring in Sachs SDG index
+#https://dashboards.sdgindex.org/explorer
+# accessed on 2023-07-20
+
+sdg_index <- read_excel(path=paste0(raw_dir, "/SDR2023-data.xlsx"),
+                        sheet='Backdated SDG Index'
+) %>%
+  transmute(iso3c=`Country Code ISO3`,
+         date=year,
+         sdg_index_score=`SDG Index Score`) %>%
+  group_by(iso3c) %>%
+  filter(date>=end_date-1) %>% #take 5 latest years
+  summarise(across(c('sdg_index_score'), mean, na.rm=TRUE)) %>%
+  select(iso3c, sdg_index_score)
+
+#bring it all together
+correlates_df_avg <- correlates_df %>%
+  left_join(ge_df) %>%
+  left_join(gdp_df) %>%
+  left_join(hci_df) %>%
+  left_join(undernourish_df) %>%
+  left_join(mmt_df) %>%
+  left_join(lpov_df) %>%
+  left_join(wbl_df) %>%
+  left_join(safely_df) %>%
+  left_join(elect_df) %>%
+  left_join(manuf_df) %>%
+  left_join(slums_df) %>%
+  left_join(ff_sub_df) %>%
+  left_join(ghg_df) %>%
+  left_join(protected_df) %>%
+  left_join(debt_df) %>%
+  left_join(sdg_index) %>%
+  filter(region!="Aggregates") %>%
+  select(iso3c, c('SI.POV.DDAY', 'SI.POV.GINI','GE.EST','NY.GDP.PCAP.KD','HD.HCI.OVRL','SN.ITK.DEFC.ZS','SH.STA.MMRT','SE.LPV.PRIM','SG.LAW.INDX','SH.H2O.SMDW.ZS',"EG.ELC.ACCS.ZS",'NV.IND.MANF.ZS','EN.POP.SLUM.UR.ZS','subsidies','EN.ATM.GHGT.KT.CE','ER.MRN.PTMR.ZS','ER.LND.PTLD.ZS','DT.TDS.DECT.EX.ZS', 'sdg_index_score'))
+
+
+```
+
+```{r comparison2avg, include=FALSE}
+
+
+
+#pull SCI values
+
+sci_df <- read_excel(paste0(raw_dir, "Statistical_Capacity_Indicators.xlsx")) %>%
+  mutate(YR2004=as.numeric(YR2004),
+         iso3c=`Country Code`) %>%
+  filter(`Series Code`=="IQ.SCI.OVRL") %>%
+  select(-`Country Code`, -`Series Code`) %>%
+  pivot_longer(
+    cols=c(YR2004:YR2020),
+    names_to='YR',
+    values_to='SCI'
+  ) %>%
+  mutate(date=str_remove_all(YR,"YR"),
+         date=as.numeric(date)) %>%
+  select(iso3c, date, SCI)
+  
+  
+  
+
+# onvert it to a data frame.
+sci_df <- sci_df %>%
+  left_join(spi_df_empty) %>% #add on country metadata
+  filter(!is.na(income)) %>%
+  select(iso3c, date, SCI  ) %>%
+  group_by(date) %>%
+  arrange(-SCI) %>%
+  mutate(SCI_rank=rank(-SCI),
+         SCI_rank=if_else(is.na(SCI),as.numeric(NA),SCI_rank)) %>%
+  group_by(iso3c) %>%
+  filter(between(date, 2019,2020)) %>%
+  summarise(across(starts_with("SCI"), mean, na.rm=TRUE))
+
+
+#read in ODIN data
+  for (i in c(2015,2016,2017,2018,2020,2022)) {
+   temp <- read_csv(paste(raw_dir, '/','ODIN_',i,'.csv', sep=""))  %>%
+        as_tibble(.name_repair = 'universal') %>%
+        mutate(date=i) %>%
+        filter(Data.categories=='All Categories') %>%
+        select(-Year)
+
+
+    assign(paste('odin_df',i,sep="_"), temp)
+  }
+
+    #bind different years together
+odin_df <- bind_rows(odin_df_2015, odin_df_2016, odin_df_2017, odin_df_2018, odin_df_2020, odin_df_2022)
+
+
+odin_df <- odin_df %>%
+    select(Country.Code, date, Overall.score) %>%
+    rename(iso3c=Country.Code,
+           ODIN_score=Overall.score) %>%
+    group_by(date) %>%
+    arrange(-ODIN_score) %>%
+    mutate(ODIN_rank=rank(-ODIN_score, na.last='NA')) %>% 
+  right_join(spi_df_empty) %>%
+  arrange(country, date) %>%
+  group_by(country) %>%
+  mutate(across(starts_with("ODIN"), na.locf, na.rm=FALSE)) %>%
+  left_join(wbstats::wb_countries()) %>%
+  group_by(iso3c) %>%
+  filter(between(date, 2021,2022)) %>%
+  summarise(across(starts_with("ODIN"), mean, na.rm=TRUE))
+
+#read in the ODB
+odb_df_2017 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2017-Rankings') %>%
+  transmute(
+    iso3c=ISO3,
+    odb=`ODB-Score`
+  )
+
+
+odb_df_2016_info <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2016-Rankings') %>%
+  select(ISO3, Country) 
+
+odb_df_2016 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2016-Absolute-Recalculated') %>%
+  left_join(odb_df_2016_info) %>%
+  transmute(
+    iso3c=ISO3,
+    odb_2016=`ODB Score (0-100)`
+  )
+
+odb_df_2015 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2015-Rankings')
+odb_df_2014 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2014-Rankings')
+odb_df_2013 <- read_excel(path=paste0(raw_dir, '/Open Data Barometer - Historical Data (All five Editions) - Public.xlsx'),
+                     sheet='ODB-2013-Rankings')
+
+odb_df <- bind_rows(
+  (odb_df_2017 %>% mutate(date=2017)),
+  (odb_df_2016 %>% mutate(date=2016, odb=odb_2016)),
+  ) %>%
+  select(iso3c, date, odb) %>%
+  left_join(country_list) %>%
+  group_by(iso3c) %>%
+  summarise(across(starts_with("odb"), mean, na.rm=TRUE))
+
+
+#read in the GDB
+gdb_df <- read_csv(paste0(raw_dir, "/global-data-barometer-topic--all-countries.csv")) %>%
+  transmute(iso3c=iso,
+            gdb=`GDB 2021 score`)
+
+
+
+#IIAG
+iiag_df <- read_csv(paste0(raw_dir, "/2022 IIAG_Scores.csv")) %>%
+  transmute(
+    iso2c=Country_ISO,
+    iiag_overall=`OVERALL GOVERNANCE`,
+    iiag_stats=`Capacity of the Statistical System`,
+    date=Year
+  ) %>%
+  left_join(country_list) %>%
+  group_by(iso3c) %>%
+  filter(between(date, 2021,2022)) %>%
+  summarise(across(c('iiag_overall','iiag_stats'), mean, na.rm=TRUE)) %>%
+  select(iso3c,iiag_overall,iiag_stats )
+  
+
+
+#create one database
+comparison_avg_df <- spi_index_df %>%
+  ungroup() %>%
+  group_by(iso3c) %>%
+  filter(between(date, 2021,2022)) %>%
+  summarise(across(starts_with("SPI.INDEX"), mean, na.rm=TRUE)) %>%
+  arrange(-SPI.INDEX) %>%
+  mutate(across(starts_with('SPI.INDEX'),~1*.),
+         across(starts_with('SPI.INDEX'),round,1)) %>%
+  select(iso3c, SPI.INDEX) %>%
+  left_join(sci_df) %>%
+  left_join(odin_df) %>%
+  left_join(odb_df) %>%
+  left_join(gdb_df) %>%
+  left_join(iiag_df) %>%
+  left_join(correlates_df_avg) 
+
+#save to output
+write_excel_csv(comparison_avg_df, paste0(output_dir, "/SPI_Index_SDG_comparisons_data_2yr_avg.csv"))
+
+
+```
 
 
 ```{r regdf, echo=FALSE}

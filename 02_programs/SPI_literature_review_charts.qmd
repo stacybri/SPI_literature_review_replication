@@ -40,6 +40,9 @@ output_dir <- paste(dir, '03_output', sep="/")
 wgt <- 1
 end_date=2022
 
+#specification taking either latest year of data available for indices, 2 year, 3 year, or 5 year averages of indices and SDGs for correlations.  options: latest, 2yr, 3yr, 5yr
+specification <- "3yr"
+
 ```
 
 
@@ -877,7 +880,16 @@ SPI <- spi_index_df
 fig1_df <- read_csv(paste0(output_dir, "/Figure_1_data.csv"))
 
 #read in data comparing SPI to other indices and SDGs
-comparison_df <- read_csv(paste0(output_dir, "/SPI_Index_SDG_comparisons_data.csv"))
+if (specification=="latest") {
+  comparison_df <- read_csv(paste0(output_dir, "/SPI_Index_SDG_comparisons_data.csv"))
+
+} else if (specification=="2yr"){
+  comparison_df <- read_csv(paste0(output_dir, "/SPI_Index_SDG_comparisons_data_2yr_avg.csv"))
+} else if (specification=="3yr"){
+  comparison_df <- read_csv(paste0(output_dir, "/SPI_Index_SDG_comparisons_data_3yr_avg.csv"))
+} else if (specification=="5yr"){
+  comparison_df <- read_csv(paste0(output_dir, "/SPI_Index_SDG_comparisons_data_5yr_avg.csv"))
+}
 
 #read in regression data with covariates
 predictors_df <- read_csv(paste0(output_dir, "/SPI_regression_predictors.csv"))
@@ -1753,9 +1765,9 @@ ggplot(fig, aes(x=var, y=abs(SPI...1))) +
   scale_x_discrete(labels=scales::wrap_format(30)) +
   theme_spi() +
   guides(
-    fill=guide_legend('Guide'),
-    color=guide_legend('Guide'),
-    shape=guide_legend('Guide')
+    fill=guide_legend(' '),
+    color=guide_legend(' '),
+    shape=guide_legend(' ')
   ) +
   theme(axis.text.y=element_text(size=11),
         legend.text = element_text(size=11),
@@ -2017,8 +2029,8 @@ for (i in 1:n) {
       z_score_2 <- atanh(correlation_2)
     
       # Step 3: Calculate standard errors of z-transformed correlations
-      n_1 <- 100  # Sample size for correlation_1
-      n_2 <- 150  # Sample size for correlation_2
+      n_1 <- index_n[row1,col1]  # Sample size for correlation_1
+      n_2 <- index_n[row2,col2]  # Sample size for correlation_2
       se_1 <- 1 / sqrt(n_1 - 3)
       se_2 <- 1 / sqrt(n_2 - 3)
     

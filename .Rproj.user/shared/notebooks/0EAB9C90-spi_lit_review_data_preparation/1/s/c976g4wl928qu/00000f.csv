@@ -1,7 +1,0 @@
-"0","span <- c(2004:end_date)"
-"0",""
-"0","#produce an empty dataset with the right number of rows (country X year observations)"
-"0","spi_df_empty <- bind_rows(replicate(length(span), wbstats::wbcountries(), simplify = FALSE), .id='date') %>%"
-"0","  mutate(date=as.numeric(date)+span[1]-1) %>%"
-"0","  filter(region!=""Aggregates"") # take out the aggregates (LAC, SAR, etc)"
-"0",""
