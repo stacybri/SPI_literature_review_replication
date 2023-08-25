@@ -41,7 +41,7 @@ wgt <- 1
 end_date=2022
 
 #specification taking either latest year of data available for indices, 2 year, 3 year, or 5 year averages of indices and SDGs for correlations.  options: latest, 2yr, 3yr, 5yr
-specification <- "3yr"
+specification <- "5yr"
 
 ```
 

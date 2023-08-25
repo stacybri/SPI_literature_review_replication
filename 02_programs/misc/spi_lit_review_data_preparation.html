@@ -364,6 +364,8 @@ CSVs for use in the file that produces the final tables and figures.</p>
 <p>Note: By re-running this code, you will overwrite all data used to
 produce the tables and figures for the paper, and thus the results may
 not replicate the final results in the paper.</p>
+<div id="poverty-surveys" class="section level2">
+<h2>Poverty Surveys</h2>
 <pre class="r"><code>#read in PIP data for Figure 1 from the paper.
 #new pipr package already includes survey coverage and comparability measures
 pip_df &lt;- get_stats()
@@ -443,6 +445,9 @@ SPI &lt;- spi_index_df
 spi_df_empty &lt;- bind_rows(replicate(length(span), wbstats::wbcountries(), simplify = FALSE), .id=&#39;date&#39;) %&gt;%
   mutate(date=as.numeric(date)+span[1]-1) %&gt;%
   filter(region!=&quot;Aggregates&quot;) # take out the aggregates (LAC, SAR, etc)</code></pre>
+</div>
+<div id="correlates-using-latest-year" class="section level2">
+<h2>Correlates using Latest Year</h2>
 <pre class="r"><code>start_date=2010
 
 correlates_df &lt;- wb_data(country=&quot;all&quot;, 
@@ -625,7 +630,106 @@ sdg_index &lt;- read_excel(path=paste0(raw_dir, &quot;/SDR2023-data.xlsx&quot;),
 ) %&gt;%
   transmute(iso3c=`Country Code ISO3`,
          date=year,
-         sdg_index_score=`SDG Index Score`)
+         sdg_index_score=`SDG Index Score`) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;sdg_index_score&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=end_date) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;sdg_index_score&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, sdg_index_score)
+
+
+#the UN’s HDI (https://hdr.undp.org/data-center/human-development-index#/indicies/HDI).  Downloaded Aug 24, 2023
+
+hdi_df &lt;- read_csv(paste0(raw_dir, &#39;HDR21-22_Composite_indices_complete_time_series.csv&#39;)) %&gt;%
+  rename(iso3c=iso3) %&gt;%
+  select(iso3c, hdi_1990:hdi_2021) %&gt;%
+  pivot_longer(
+    cols=c(&#39;hdi_1990&#39;:&#39;hdi_2021&#39;),
+    names_to=&#39;index&#39;,
+    values_to=&#39;hdi_value&#39;
+  ) %&gt;%
+  mutate(
+    date=as.numeric(str_sub(index,5,8))
+  ) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;hdi_value&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2021) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;hdi_value&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, hdi_value)
+              
+#Yale’s Environmental Performance Index (https://epi.yale.edu/).  Downloaded Aug 24, 2023
+epi_2022_df &lt;- read_csv(paste0(raw_dir, &#39;epi2022results05302022.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.new) %&gt;%
+  mutate(date=2022) %&gt;%
+  select(iso3c, date, env_perform_index)
+
+epi_2020_df &lt;- read_csv(paste0(raw_dir, &#39;epi2020results.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.new) %&gt;%
+  mutate(date=2020) %&gt;%
+  select(iso3c, date, env_perform_index)
+
+epi_2018_df &lt;- read_csv(paste0(raw_dir, &#39;epi2018results.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.current) %&gt;%
+  mutate(date=2018) %&gt;%
+  select(iso3c, date, env_perform_index)
+
+epi_df &lt;- bind_rows(epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;env_perform_index&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2022) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;env_perform_index&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, env_perform_index)
+
+##Harvard’s Economic complexity index (https://atlas.cid.harvard.edu/rankings).  Downloaded Aug 24, 2023
+ec_complex_df &lt;- read_csv(paste0(raw_dir, &quot;Country Complexity Rankings 1995 - 2021.csv&quot;)) %&gt;%
+  select(iso3c, `ECI 1995`:`ECI 2021`) %&gt;%
+  pivot_longer(
+    cols=c(&#39;ECI 1995&#39;:&#39;ECI 2021&#39;),
+    names_to=&#39;index&#39;,
+    values_to=&#39;eci_value&#39;
+  ) %&gt;%
+  mutate(
+    date=as.numeric(str_sub(index,5,8))
+  ) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;eci_value&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2021) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;eci_value&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, eci_value)
+
+
+#World press freedom index (https://rsf.org/en/index).  Downloaded Aug 24, 2023
+press_free_df &lt;- bind_rows(
+  read_delim(paste0(raw_dir, &quot;press_freedom_2023.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2022.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2021.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2020.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2019.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2018.csv&quot;), delim=&quot;;&quot;)
+) %&gt;%
+  transmute(
+    iso3c=ISO,
+    press_free_score=Score,
+    date=`Year (N)`
+  ) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;press_free_score&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2023) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;press_free_score&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, press_free_score)
+
+#OECD’s better life index (https://www.oecdbetterlifeindex.org/#/11111111111).  Downloaded Aug 24, 2023.  Only one year of data as not comparable over time.
+bli_df &lt;- read_csv(paste0(raw_dir, &#39;BLI_20230824.csv&#39;)) %&gt;%
+  rename(iso3c=LOCATION) %&gt;%
+  #zscore all indicators
+  group_by(Indicator) %&gt;%
+  mutate(zscore=(Value-mean(Value, na.rm=TRUE))/sd(Value, na.rm=TRUE)) %&gt;%
+  #combine indicators with equal weight
+  group_by(iso3c) %&gt;%
+  summarise(better_life_index=mean(zscore))
 
 #bring it all together
 correlates_df_end_date &lt;- correlates_df %&gt;%
@@ -645,8 +749,13 @@ correlates_df_end_date &lt;- correlates_df %&gt;%
   left_join(protected_df) %&gt;%
   left_join(debt_df) %&gt;%
   left_join(sdg_index) %&gt;%
+  left_join(hdi_df) %&gt;%
+  left_join(epi_df) %&gt;%
+  left_join(ec_complex_df) %&gt;%
+  left_join(press_free_df) %&gt;%
+  left_join(bli_df) %&gt;%
   filter(region!=&quot;Aggregates&quot;) %&gt;%
-  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.ATM.GHGT.KT.CE&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;))
+  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.ATM.GHGT.KT.CE&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;))
 
 
 sdgs &lt;- c(&#39;SI.POV.DDAY&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,
@@ -657,8 +766,9 @@ sdgs &lt;- c(&#39;SI.POV.DDAY&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39
 sdg_names &lt;- c(&#39;SDG 1: Extreme Poverty&#39;,&#39;SDG 2: Undernourishment&#39;,&#39;SDG 3: Maternal Mortality&#39;,&#39;SDG 4: Learning Poverty&#39;,&#39;SDG 5: Women, Business, Law Index&#39;,
           &#39;SDG 6: Safely Managed Water&#39;,&#39;SDG 7: Access to Electricity&#39;,&#39;SDG 8: GDP per capita (2015 constant $)&#39;,&#39;SDG 9: Manufacturing value added (% of GDP)&#39;,&#39;SDG 10: Gini Index&#39;,
           &#39;SDG 11: Population in Slums&#39;,&#39;SDG 12: Fossil Fuel Subsidies (% of GDP)&#39;,&#39;SDG 13: Greenhouse Gas Emissions&#39;,&#39;SDG 14: Marine protected areas&#39;,&#39;SDG 15: Terrestrial Protected Areas&#39;,&#39;SDG 16: Government Effectiveness&#39;,&#39;SDG 17: Total Debt Service&#39;, &#39;SDR: SDG Index Overall Score&#39;)</code></pre>
-<p>Do the same thing, but instead of latest year of data available take
-the average of 5 preceding years.</p>
+<div id="do-the-same-thing-but-instead-of-latest-year-of-data-available-take-the-average-of-5-preceding-years." class="section level3">
+<h3>Do the same thing, but instead of latest year of data available take
+the average of 5 preceding years.</h3>
 <pre class="r"><code>#instead of the latest value, take the 5 year average
 
 start_date=2010
@@ -867,6 +977,100 @@ sdg_index &lt;- read_excel(path=paste0(raw_dir, &quot;/SDR2023-data.xlsx&quot;),
   summarise(across(c(&#39;sdg_index_score&#39;), mean, na.rm=TRUE)) %&gt;%
   select(iso3c, sdg_index_score)
 
+
+#the UN’s HDI (https://hdr.undp.org/data-center/human-development-index#/indicies/HDI).  Downloaded Aug 24, 2023
+
+hdi_df &lt;- read_csv(paste0(raw_dir, &#39;HDR21-22_Composite_indices_complete_time_series.csv&#39;)) %&gt;%
+  rename(iso3c=iso3) %&gt;%
+  select(iso3c, hdi_1990:hdi_2021) %&gt;%
+  pivot_longer(
+    cols=c(&#39;hdi_1990&#39;:&#39;hdi_2021&#39;),
+    names_to=&#39;index&#39;,
+    values_to=&#39;hdi_value&#39;
+  ) %&gt;%
+  mutate(
+    date=as.numeric(str_sub(index,5,8))
+  ) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;hdi_value&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2021-4) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;hdi_value&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, hdi_value)
+
+#Yale’s Environmental Performance Index (https://epi.yale.edu/).  Downloaded Aug 24, 2023
+epi_2022_df &lt;- read_csv(paste0(raw_dir, &#39;epi2022results05302022.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.new) %&gt;%
+  mutate(date=2022) %&gt;%
+  select(iso3c, date, env_perform_index)
+
+epi_2020_df &lt;- read_csv(paste0(raw_dir, &#39;epi2020results.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.new) %&gt;%
+  mutate(date=2020) %&gt;%
+  select(iso3c, date, env_perform_index)
+
+epi_2018_df &lt;- read_csv(paste0(raw_dir, &#39;epi2018results.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.current) %&gt;%
+  mutate(date=2018) %&gt;%
+  select(iso3c, date, env_perform_index)
+
+epi_df &lt;- bind_rows(epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;env_perform_index&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2022-4) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;env_perform_index&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, env_perform_index)
+
+##Harvard’s Economic complexity index (https://atlas.cid.harvard.edu/rankings).  Downloaded Aug 24, 2023
+ec_complex_df &lt;- read_csv(paste0(raw_dir, &quot;Country Complexity Rankings 1995 - 2021.csv&quot;)) %&gt;%
+  select(iso3c, `ECI 1995`:`ECI 2021`) %&gt;%
+  pivot_longer(
+    cols=c(&#39;ECI 1995&#39;:&#39;ECI 2021&#39;),
+    names_to=&#39;index&#39;,
+    values_to=&#39;eci_value&#39;
+  ) %&gt;%
+  mutate(
+    date=as.numeric(str_sub(index,5,8))
+  ) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;eci_value&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2021-4) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;eci_value&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, eci_value)
+
+#World press freedom index (https://rsf.org/en/index).  Downloaded Aug 24, 2023
+press_free_df &lt;- bind_rows(
+  read_delim(paste0(raw_dir, &quot;press_freedom_2023.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2022.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2021.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2020.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2019.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2018.csv&quot;), delim=&quot;;&quot;)
+) %&gt;%
+  transmute(
+    iso3c=ISO,
+    press_free_score=Score,
+    date=`Year (N)`
+  ) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;press_free_score&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2023-4) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;press_free_score&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, press_free_score)
+
+#OECD’s better life index (https://www.oecdbetterlifeindex.org/#/11111111111).  Downloaded Aug 24, 2023.  Only one year of data as not comparable over time.
+bli_df &lt;- read_csv(paste0(raw_dir, &#39;BLI_20230824.csv&#39;)) %&gt;%
+  rename(iso3c=LOCATION) %&gt;%
+  #zscore all indicators
+  group_by(Indicator) %&gt;%
+  mutate(zscore=(Value-mean(Value, na.rm=TRUE))/sd(Value, na.rm=TRUE)) %&gt;%
+  #combine indicators with equal weight
+  group_by(iso3c) %&gt;%
+  summarise(better_life_index=mean(zscore))
+
+
 #bring it all together
 correlates_df_avg &lt;- correlates_df %&gt;%
   left_join(ge_df) %&gt;%
@@ -885,9 +1089,16 @@ correlates_df_avg &lt;- correlates_df %&gt;%
   left_join(protected_df) %&gt;%
   left_join(debt_df) %&gt;%
   left_join(sdg_index) %&gt;%
+  left_join(hdi_df) %&gt;%
+  left_join(epi_df) %&gt;%
+  left_join(ec_complex_df) %&gt;%
+  left_join(press_free_df) %&gt;%
+  left_join(bli_df) %&gt;%
   filter(region!=&quot;Aggregates&quot;) %&gt;%
-  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.ATM.GHGT.KT.CE&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;))</code></pre>
-<p>Now do a three year average.</p>
+  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.ATM.GHGT.KT.CE&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;))</code></pre>
+</div>
+<div id="now-do-a-three-year-average." class="section level3">
+<h3>Now do a three year average.</h3>
 <pre class="r"><code>#instead of the latest value, take the 5 year average
 
 start_date=2010
@@ -1096,6 +1307,98 @@ sdg_index &lt;- read_excel(path=paste0(raw_dir, &quot;/SDR2023-data.xlsx&quot;),
   summarise(across(c(&#39;sdg_index_score&#39;), mean, na.rm=TRUE)) %&gt;%
   select(iso3c, sdg_index_score)
 
+#hdi
+hdi_df &lt;- read_csv(paste0(raw_dir, &#39;HDR21-22_Composite_indices_complete_time_series.csv&#39;)) %&gt;%
+  rename(iso3c=iso3) %&gt;%
+  select(iso3c, hdi_1990:hdi_2021) %&gt;%
+  pivot_longer(
+    cols=c(&#39;hdi_1990&#39;:&#39;hdi_2021&#39;),
+    names_to=&#39;index&#39;,
+    values_to=&#39;hdi_value&#39;
+  ) %&gt;%
+  mutate(
+    date=as.numeric(str_sub(index,5,8))
+  ) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;hdi_value&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2021-2) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;hdi_value&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, hdi_value)
+
+#Yale’s Environmental Performance Index (https://epi.yale.edu/).  Downloaded Aug 24, 2023
+epi_2022_df &lt;- read_csv(paste0(raw_dir, &#39;epi2022results05302022.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.new) %&gt;%
+  mutate(date=2022) %&gt;%
+  select(iso3c, date, env_perform_index)
+
+epi_2020_df &lt;- read_csv(paste0(raw_dir, &#39;epi2020results.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.new) %&gt;%
+  mutate(date=2020) %&gt;%
+  select(iso3c, date, env_perform_index)
+
+epi_2018_df &lt;- read_csv(paste0(raw_dir, &#39;epi2018results.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.current) %&gt;%
+  mutate(date=2018) %&gt;%
+  select(iso3c, date, env_perform_index)
+
+epi_df &lt;- bind_rows(epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;env_perform_index&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2022-2) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;env_perform_index&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, env_perform_index)
+
+##Harvard’s Economic complexity index (https://atlas.cid.harvard.edu/rankings).  Downloaded Aug 24, 2023
+ec_complex_df &lt;- read_csv(paste0(raw_dir, &quot;Country Complexity Rankings 1995 - 2021.csv&quot;)) %&gt;%
+  select(iso3c, `ECI 1995`:`ECI 2021`) %&gt;%
+  pivot_longer(
+    cols=c(&#39;ECI 1995&#39;:&#39;ECI 2021&#39;),
+    names_to=&#39;index&#39;,
+    values_to=&#39;eci_value&#39;
+  ) %&gt;%
+  mutate(
+    date=as.numeric(str_sub(index,5,8))
+  ) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;eci_value&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2021-2) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;eci_value&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, eci_value)
+
+#World press freedom index (https://rsf.org/en/index).  Downloaded Aug 24, 2023
+press_free_df &lt;- bind_rows(
+  read_delim(paste0(raw_dir, &quot;press_freedom_2023.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2022.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2021.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2020.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2019.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2018.csv&quot;), delim=&quot;;&quot;)
+) %&gt;%
+  transmute(
+    iso3c=ISO,
+    press_free_score=Score,
+    date=`Year (N)`
+  ) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;press_free_score&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2023-2) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;press_free_score&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, press_free_score)
+
+#OECD’s better life index (https://www.oecdbetterlifeindex.org/#/11111111111).  Downloaded Aug 24, 2023.  Only one year of data as not comparable over time.
+bli_df &lt;- read_csv(paste0(raw_dir, &#39;BLI_20230824.csv&#39;)) %&gt;%
+  rename(iso3c=LOCATION) %&gt;%
+  #zscore all indicators
+  group_by(Indicator) %&gt;%
+  mutate(zscore=(Value-mean(Value, na.rm=TRUE))/sd(Value, na.rm=TRUE)) %&gt;%
+  #combine indicators with equal weight
+  group_by(iso3c) %&gt;%
+  summarise(better_life_index=mean(zscore))
+
+
 #bring it all together
 correlates_df_avg &lt;- correlates_df %&gt;%
   left_join(ge_df) %&gt;%
@@ -1114,9 +1417,16 @@ correlates_df_avg &lt;- correlates_df %&gt;%
   left_join(protected_df) %&gt;%
   left_join(debt_df) %&gt;%
   left_join(sdg_index) %&gt;%
+  left_join(hdi_df) %&gt;%
+  left_join(epi_df) %&gt;%
+  left_join(ec_complex_df) %&gt;%
+  left_join(press_free_df) %&gt;%
+  left_join(bli_df) %&gt;%
   filter(region!=&quot;Aggregates&quot;) %&gt;%
-  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.ATM.GHGT.KT.CE&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;))</code></pre>
-<p>Two year average</p>
+  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.ATM.GHGT.KT.CE&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;))</code></pre>
+</div>
+<div id="two-year-average" class="section level3">
+<h3>Two year average</h3>
 <pre class="r"><code>#instead of the latest value, take the 5 year average
 
 start_date=2010
@@ -1324,6 +1634,98 @@ sdg_index &lt;- read_excel(path=paste0(raw_dir, &quot;/SDR2023-data.xlsx&quot;),
   summarise(across(c(&#39;sdg_index_score&#39;), mean, na.rm=TRUE)) %&gt;%
   select(iso3c, sdg_index_score)
 
+
+#hdi
+hdi_df &lt;- read_csv(paste0(raw_dir, &#39;HDR21-22_Composite_indices_complete_time_series.csv&#39;)) %&gt;%
+  rename(iso3c=iso3) %&gt;%
+  select(iso3c, hdi_1990:hdi_2021) %&gt;%
+  pivot_longer(
+    cols=c(&#39;hdi_1990&#39;:&#39;hdi_2021&#39;),
+    names_to=&#39;index&#39;,
+    values_to=&#39;hdi_value&#39;
+  ) %&gt;%
+  mutate(
+    date=as.numeric(str_sub(index,5,8))
+  ) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;hdi_value&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2021-1) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;hdi_value&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, hdi_value)
+
+#Yale’s Environmental Performance Index (https://epi.yale.edu/).  Downloaded Aug 24, 2023
+epi_2022_df &lt;- read_csv(paste0(raw_dir, &#39;epi2022results05302022.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.new) %&gt;%
+  mutate(date=2022) %&gt;%
+  select(iso3c, date, env_perform_index)
+
+epi_2020_df &lt;- read_csv(paste0(raw_dir, &#39;epi2020results.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.new) %&gt;%
+  mutate(date=2020) %&gt;%
+  select(iso3c, date, env_perform_index)
+
+epi_2018_df &lt;- read_csv(paste0(raw_dir, &#39;epi2018results.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.current) %&gt;%
+  mutate(date=2018) %&gt;%
+  select(iso3c, date, env_perform_index)
+
+epi_df &lt;- bind_rows(epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;env_perform_index&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2022-1) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;env_perform_index&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, env_perform_index)
+
+##Harvard’s Economic complexity index (https://atlas.cid.harvard.edu/rankings).  Downloaded Aug 24, 2023
+ec_complex_df &lt;- read_csv(paste0(raw_dir, &quot;Country Complexity Rankings 1995 - 2021.csv&quot;)) %&gt;%
+  select(iso3c, `ECI 1995`:`ECI 2021`) %&gt;%
+  pivot_longer(
+    cols=c(&#39;ECI 1995&#39;:&#39;ECI 2021&#39;),
+    names_to=&#39;index&#39;,
+    values_to=&#39;eci_value&#39;
+  ) %&gt;%
+  mutate(
+    date=as.numeric(str_sub(index,5,8))
+  ) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;eci_value&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2021-1) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;eci_value&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, eci_value)
+
+#World press freedom index (https://rsf.org/en/index).  Downloaded Aug 24, 2023
+press_free_df &lt;- bind_rows(
+  read_delim(paste0(raw_dir, &quot;press_freedom_2023.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2022.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2021.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2020.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2019.csv&quot;), delim=&quot;;&quot;),
+  read_delim(paste0(raw_dir, &quot;press_freedom_2018.csv&quot;), delim=&quot;;&quot;)
+) %&gt;%
+  transmute(
+    iso3c=ISO,
+    press_free_score=Score,
+    date=`Year (N)`
+  ) %&gt;%
+  group_by(iso3c) %&gt;%
+  fill(c(&#39;press_free_score&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2023-1) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;press_free_score&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, press_free_score)
+
+#OECD’s better life index (https://www.oecdbetterlifeindex.org/#/11111111111).  Downloaded Aug 24, 2023.  Only one year of data as not comparable over time.
+bli_df &lt;- read_csv(paste0(raw_dir, &#39;BLI_20230824.csv&#39;)) %&gt;%
+  rename(iso3c=LOCATION) %&gt;%
+  #zscore all indicators
+  group_by(Indicator) %&gt;%
+  mutate(zscore=(Value-mean(Value, na.rm=TRUE))/sd(Value, na.rm=TRUE)) %&gt;%
+  #combine indicators with equal weight
+  group_by(iso3c) %&gt;%
+  summarise(better_life_index=mean(zscore))
+
 #bring it all together
 correlates_df_avg &lt;- correlates_df %&gt;%
   left_join(ge_df) %&gt;%
@@ -1342,8 +1744,18 @@ correlates_df_avg &lt;- correlates_df %&gt;%
   left_join(protected_df) %&gt;%
   left_join(debt_df) %&gt;%
   left_join(sdg_index) %&gt;%
+  left_join(hdi_df) %&gt;%
+  left_join(epi_df) %&gt;%
+  left_join(ec_complex_df) %&gt;%
+  left_join(press_free_df) %&gt;%
+  left_join(bli_df) %&gt;%
   filter(region!=&quot;Aggregates&quot;) %&gt;%
-  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.ATM.GHGT.KT.CE&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;))</code></pre>
+  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.ATM.GHGT.KT.CE&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;))</code></pre>
+</div>
+</div>
+<div id="regression-predictors" class="section level2">
+<h2>Regression Predictors</h2>
+</div>
 
 
 
