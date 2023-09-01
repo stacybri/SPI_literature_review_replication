@@ -415,12 +415,40 @@ press_free_df <- bind_rows(
 #OECD’s better life index (https://www.oecdbetterlifeindex.org/#/11111111111).  Downloaded Aug 24, 2023.  Only one year of data as not comparable over time.
 bli_df <- read_csv(paste0(raw_dir, 'BLI_20230824.csv')) %>%
   rename(iso3c=LOCATION) %>%
-  #zscore all indicators
+  mutate(
+    category=case_when(
+      Indicator %in% c("Housing expenditure", "Dwellings without basic facilities", "Rooms per person") ~ "Housing",
+      Indicator %in% c("Household net wealth", "Household net adjusted disposable income") ~ "Income",
+      Indicator %in% c('Labour market insecurity', 'Personal earnings', 'Long-term unemployment rate', 'Employment rate') ~ "Jobs",
+      Indicator %in% c('Quality of support network') ~ "Community",
+      Indicator %in% c('Years in education','Student skills','Educational attainment') ~ "Education",
+      Indicator %in% c('Water quality', "Air pollution") ~ "Environment",
+      Indicator %in% c('Stakeholder engagement for developing regulations', 'Voter turnout') ~ "Civic engagement",
+      Indicator %in% c('Self-reported health', 'Life expectancy') ~ "Health",
+      Indicator %in% c('Life satisfaction') ~ "Life satisfaction",
+      Indicator %in% c('Homicide rate', 'Feeling safe walking alone at night') ~ "Safety",
+      Indicator %in% c('Time devoted to leisure and personal care','Employees working very long hours') ~ "Work-Life Balance"
+      
+    )
+  ) %>%
   group_by(Indicator) %>%
   mutate(zscore=(Value-mean(Value, na.rm=TRUE))/sd(Value, na.rm=TRUE)) %>%
+  mutate(
+    score=case_when(#give 1 to a best perfomer and 0 to worst
+      Indicator %in% c("Housing expenditure", "Dwellings without basic facilities",
+                       'Labour market insecurity','Long-term unemployment rate',
+                       "Air pollution", 'Homicide rate', 'Employees working very long hours') ~
+        1-(Value-min(Value))/(max(Value)-min(Value)),
+      TRUE ~ 
+        (Value-min(Value))/(max(Value)-min(Value))
+    )
+  ) %>%
+  #zscore all indicators
+  group_by(iso3c,category  ) %>%
   #combine indicators with equal weight
+  summarise(better_life_subindex=mean(score, na.rm=TRUE)) %>%
   group_by(iso3c) %>%
-  summarise(better_life_index=mean(zscore))
+  summarise(better_life_index=sum(better_life_subindex))
 
 #bring it all together
 correlates_df_end_date <- correlates_df %>%
@@ -923,12 +951,40 @@ press_free_df <- bind_rows(
 #OECD’s better life index (https://www.oecdbetterlifeindex.org/#/11111111111).  Downloaded Aug 24, 2023.  Only one year of data as not comparable over time.
 bli_df <- read_csv(paste0(raw_dir, 'BLI_20230824.csv')) %>%
   rename(iso3c=LOCATION) %>%
-  #zscore all indicators
+  mutate(
+    category=case_when(
+      Indicator %in% c("Housing expenditure", "Dwellings without basic facilities", "Rooms per person") ~ "Housing",
+      Indicator %in% c("Household net wealth", "Household net adjusted disposable income") ~ "Income",
+      Indicator %in% c('Labour market insecurity', 'Personal earnings', 'Long-term unemployment rate', 'Employment rate') ~ "Jobs",
+      Indicator %in% c('Quality of support network') ~ "Community",
+      Indicator %in% c('Years in education','Student skills','Educational attainment') ~ "Education",
+      Indicator %in% c('Water quality', "Air pollution") ~ "Environment",
+      Indicator %in% c('Stakeholder engagement for developing regulations', 'Voter turnout') ~ "Civic engagement",
+      Indicator %in% c('Self-reported health', 'Life expectancy') ~ "Health",
+      Indicator %in% c('Life satisfaction') ~ "Life satisfaction",
+      Indicator %in% c('Homicide rate', 'Feeling safe walking alone at night') ~ "Safety",
+      Indicator %in% c('Time devoted to leisure and personal care','Employees working very long hours') ~ "Work-Life Balance"
+      
+    )
+  ) %>%
   group_by(Indicator) %>%
+  mutate(
+    score=case_when(#give 1 to a best perfomer and 0 to worst
+      Indicator %in% c("Housing expenditure", "Dwellings without basic facilities",
+                       'Labour market insecurity','Long-term unemployment rate',
+                       "Air pollution", 'Homicide rate', 'Employees working very long hours') ~
+        1-(Value-min(Value))/(max(Value)-min(Value)),
+      TRUE ~ 
+        (Value-min(Value))/(max(Value)-min(Value))
+    )
+  ) %>%
+  #zscore all indicators
   mutate(zscore=(Value-mean(Value, na.rm=TRUE))/sd(Value, na.rm=TRUE)) %>%
+  group_by(iso3c,category  ) %>%
   #combine indicators with equal weight
+  summarise(better_life_subindex=mean(score, na.rm=TRUE)) %>%
   group_by(iso3c) %>%
-  summarise(better_life_index=mean(zscore))
+  summarise(better_life_index=sum(better_life_subindex))
 
 
 #bring it all together
@@ -1410,14 +1466,43 @@ press_free_df <- bind_rows(
   select(iso3c, press_free_score)
 
 #OECD’s better life index (https://www.oecdbetterlifeindex.org/#/11111111111).  Downloaded Aug 24, 2023.  Only one year of data as not comparable over time.
+#OECD’s better life index (https://www.oecdbetterlifeindex.org/#/11111111111).  Downloaded Aug 24, 2023.  Only one year of data as not comparable over time.
 bli_df <- read_csv(paste0(raw_dir, 'BLI_20230824.csv')) %>%
   rename(iso3c=LOCATION) %>%
-  #zscore all indicators
+  mutate(
+    category=case_when(
+      Indicator %in% c("Housing expenditure", "Dwellings without basic facilities", "Rooms per person") ~ "Housing",
+      Indicator %in% c("Household net wealth", "Household net adjusted disposable income") ~ "Income",
+      Indicator %in% c('Labour market insecurity', 'Personal earnings', 'Long-term unemployment rate', 'Employment rate') ~ "Jobs",
+      Indicator %in% c('Quality of support network') ~ "Community",
+      Indicator %in% c('Years in education','Student skills','Educational attainment') ~ "Education",
+      Indicator %in% c('Water quality', "Air pollution") ~ "Environment",
+      Indicator %in% c('Stakeholder engagement for developing regulations', 'Voter turnout') ~ "Civic engagement",
+      Indicator %in% c('Self-reported health', 'Life expectancy') ~ "Health",
+      Indicator %in% c('Life satisfaction') ~ "Life satisfaction",
+      Indicator %in% c('Homicide rate', 'Feeling safe walking alone at night') ~ "Safety",
+      Indicator %in% c('Time devoted to leisure and personal care','Employees working very long hours') ~ "Work-Life Balance"
+      
+    )
+  ) %>%
   group_by(Indicator) %>%
+  mutate(
+    score=case_when(#give 1 to a best perfomer and 0 to worst
+      Indicator %in% c("Housing expenditure", "Dwellings without basic facilities",
+                       'Labour market insecurity','Long-term unemployment rate',
+                       "Air pollution", 'Homicide rate', 'Employees working very long hours') ~
+        1-(Value-min(Value))/(max(Value)-min(Value)),
+      TRUE ~ 
+        (Value-min(Value))/(max(Value)-min(Value))
+    )
+  ) %>%
+  #zscore all indicators
   mutate(zscore=(Value-mean(Value, na.rm=TRUE))/sd(Value, na.rm=TRUE)) %>%
+  group_by(iso3c,category  ) %>%
   #combine indicators with equal weight
+  summarise(better_life_subindex=mean(score, na.rm=TRUE)) %>%
   group_by(iso3c) %>%
-  summarise(better_life_index=mean(zscore))
+  summarise(better_life_index=sum(better_life_subindex))
 
 
 #bring it all together
@@ -1897,14 +1982,43 @@ press_free_df <- bind_rows(
   select(iso3c, press_free_score)
 
 #OECD’s better life index (https://www.oecdbetterlifeindex.org/#/11111111111).  Downloaded Aug 24, 2023.  Only one year of data as not comparable over time.
+#OECD’s better life index (https://www.oecdbetterlifeindex.org/#/11111111111).  Downloaded Aug 24, 2023.  Only one year of data as not comparable over time.
 bli_df <- read_csv(paste0(raw_dir, 'BLI_20230824.csv')) %>%
   rename(iso3c=LOCATION) %>%
-  #zscore all indicators
+  mutate(
+    category=case_when(
+      Indicator %in% c("Housing expenditure", "Dwellings without basic facilities", "Rooms per person") ~ "Housing",
+      Indicator %in% c("Household net wealth", "Household net adjusted disposable income") ~ "Income",
+      Indicator %in% c('Labour market insecurity', 'Personal earnings', 'Long-term unemployment rate', 'Employment rate') ~ "Jobs",
+      Indicator %in% c('Quality of support network') ~ "Community",
+      Indicator %in% c('Years in education','Student skills','Educational attainment') ~ "Education",
+      Indicator %in% c('Water quality', "Air pollution") ~ "Environment",
+      Indicator %in% c('Stakeholder engagement for developing regulations', 'Voter turnout') ~ "Civic engagement",
+      Indicator %in% c('Self-reported health', 'Life expectancy') ~ "Health",
+      Indicator %in% c('Life satisfaction') ~ "Life satisfaction",
+      Indicator %in% c('Homicide rate', 'Feeling safe walking alone at night') ~ "Safety",
+      Indicator %in% c('Time devoted to leisure and personal care','Employees working very long hours') ~ "Work-Life Balance"
+      
+    )
+  ) %>%
   group_by(Indicator) %>%
+  mutate(
+    score=case_when(#give 1 to a best perfomer and 0 to worst
+      Indicator %in% c("Housing expenditure", "Dwellings without basic facilities",
+                       'Labour market insecurity','Long-term unemployment rate',
+                       "Air pollution", 'Homicide rate', 'Employees working very long hours') ~
+        1-(Value-min(Value))/(max(Value)-min(Value)),
+      TRUE ~ 
+        (Value-min(Value))/(max(Value)-min(Value))
+    )
+  ) %>%
+  #zscore all indicators
   mutate(zscore=(Value-mean(Value, na.rm=TRUE))/sd(Value, na.rm=TRUE)) %>%
+  group_by(iso3c,category  ) %>%
   #combine indicators with equal weight
+  summarise(better_life_subindex=mean(score, na.rm=TRUE)) %>%
   group_by(iso3c) %>%
-  summarise(better_life_index=mean(zscore))
+  summarise(better_life_index=sum(better_life_subindex))
 
 #bring it all together
 correlates_df_avg <- correlates_df %>%
