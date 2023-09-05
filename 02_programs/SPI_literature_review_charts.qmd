@@ -1273,6 +1273,8 @@ For each country, a country specific time trend was calculated using data for th
 
 A set of 15 countries that are the largest over-performers and 15 of the largest underperformers are shown below for each index.
 
+
+Figure. Over/Under-Performers in 2022 for SPI and ODIN overall scores compared to 5 year country trends.
 ```{r}
 #| label: overunder
 #| fig-width: 9
@@ -1359,6 +1361,94 @@ spi_overperformers_plot + odin_overperformers_plot +
                   )
 ```
 
+
+Figure. Over/Under-Performers in 2021 for SPI and ODIN overall scores compared to 5 year country trends.
+```{r}
+#| label: overunder2
+#| fig-width: 9
+#| fig-height: 6
+
+#SPI overperformers
+spi_overperformers_df <- SPI_prediction_data %>%
+  filter(date==2021) %>%
+  mutate(resid=SPI.INDEX-SPI_predicted_values) %>%
+  arrange(-resid) %>%
+  head(15)
+
+spi_underperformers_df <- SPI_prediction_data %>%
+  filter(date==2021) %>%
+  mutate(resid=SPI.INDEX-SPI_predicted_values) %>%
+  arrange(resid) %>%
+  head(15)
+
+
+spi_overperformers_plot <-  spi_overperformers_df %>%
+  bind_rows(spi_underperformers_df) %>%
+  arrange(resid) 
+
+spi_overperformers_plot <- spi_overperformers_plot %>%
+  mutate(country=factor(country, levels=unique(spi_overperformers_plot$country)),
+         group=if_else(resid>=0, 'above','below')) %>%
+  ggplot(aes(x=country, y=resid, color=group)) +
+  geom_segment( aes(x=country ,xend=country, y=0, yend=resid), color="black") +
+  geom_point(size=3) +
+  scale_color_manual(name="",
+                     labels = c("Over-performers", "Under-performers"),
+                     values = c('above'="#1A9850", 'below'="#D73027")) +
+  coord_flip() +
+  theme_spi() +
+  theme(
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.y = element_blank(),
+    legend.position = 'bottom'
+  ) +
+  xlab("") +
+  ylab("SPI (deviation)") 
+
+# do same for ODIN
+odin_overperformers_df <- ODIN_prediction_data %>%
+  filter(date==2021) %>%
+  mutate(resid=ODIN_score-ODIN_predicted_values) %>%
+  arrange(-resid) %>%
+  head(15)
+
+odin_underperformers_df <- ODIN_prediction_data %>%
+  filter(date==2021) %>%
+  mutate(resid=ODIN_score-ODIN_predicted_values) %>%
+  arrange(resid) %>%
+  head(15)
+
+
+odin_overperformers_plot <-  odin_overperformers_df %>%
+  bind_rows(odin_underperformers_df) %>%
+  arrange(resid) 
+
+odin_overperformers_plot <- odin_overperformers_plot %>%
+  mutate(country=factor(country, levels=unique(odin_overperformers_plot$country)),
+         group=if_else(resid>=0, 'above','below')) %>%
+  ggplot(aes(x=country, y=resid, color=group)) +
+  geom_segment( aes(x=country ,xend=country, y=0, yend=resid), color="black") +
+  geom_point(size=3) +
+  scale_color_manual(name="",
+                     labels = c("Over-performers", "Under-performers"),
+                     values = c('above'="#1A9850", 'below'="#D73027")) +
+  coord_flip() +
+  theme_spi() +
+  theme(
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.y = element_blank(),
+    legend.position = 'none',
+  ) +
+  xlab("") +
+  ylab("ODIN (deviation)") 
+
+spi_overperformers_plot + odin_overperformers_plot +
+  plot_annotation(
+    # title='Top 15 Over/Under-Performers on SPI overall score compared to GDP per capita and Human Capital Index',
+                  caption=str_wrap('Over and under performers calculated by taking a country specific time trend using OLS regression of SPI overall score or ODIN score on the year using data from 2016 to 2020 and calculting residuals from this regression in 2021.',100)
+                  )
+```
+
 ```{r}
 
 #create table
@@ -1411,6 +1501,62 @@ performers_df <- spi_performers_df %>%
   left_join(odin_performers_df)
 
 cor(performers_df$spi_resid, performers_df$odin_resid)
+```
+
+
+Movement between quintiles
+
+Table. Top Movers for SPI and ODIN between 2016 and 2022.
+```{r}
+SPI_quantiles <- SPI %>% 
+    filter(date>2015) %>%
+  group_by(date) %>% 
+  mutate(SPI.INDEX.quintile = cut(SPI.INDEX, quantile(SPI.INDEX, probs=c(0,0.2,.4,.6,.8,1), na.rm=T), right=FALSE, include.lowest=TRUE, labels=c(1, 2, 3, 4, 5))) %>%
+         select(country, iso3c, date, SPI.INDEX.quintile)
+
+ODIN_quantiles <- odin_df %>%
+  filter(date>2015) %>%
+  group_by(date) %>% 
+  mutate(ODIN.quintile = cut(ODIN_score, quantile(ODIN_score, probs=c(0,0.2,.4,.6,.8,1), na.rm=T), right=FALSE, include.lowest=TRUE, labels=c(1, 2, 3, 4, 5))) %>%
+         select(country, iso3c, date, ODIN.quintile) 
+
+quantiles_df <- SPI_quantiles %>%
+  left_join(ODIN_quantiles) %>%
+  pivot_wider(
+    names_from=date,
+    names_glue="{.value}_{date}",
+    values_from=c(SPI.INDEX.quintile, ODIN.quintile)
+  ) %>%
+  mutate(spi_movers=as.numeric(SPI.INDEX.quintile_2022)-as.numeric(SPI.INDEX.quintile_2016),
+         odin_movers=as.numeric(ODIN.quintile_2022)-as.numeric(ODIN.quintile_2016),
+         conflict=abs(spi_movers-odin_movers)) %>%
+  arrange(-conflict)
+
+col_palette <- c("#2ec4b6", "#acece7", "#f1dc76",  "#ffbf69","#ff9f1c"   )
+
+brks <- c(1,2,3,4,5)
+
+quantiles_df %>%
+  head(n=20) %>%
+  select(country, SPI.INDEX.quintile_2016, SPI.INDEX.quintile_2022, ODIN.quintile_2016, ODIN.quintile_2022 ) %>%
+  mutate(across(c( 'SPI.INDEX.quintile_2016', 'SPI.INDEX.quintile_2022', 'ODIN.quintile_2016', 'ODIN.quintile_2022'), as.numeric)) %>%
+  flextable() %>%
+        set_header_labels(values=list(
+                             country="Country",
+                             SPI.INDEX.quintile_2016="2016 SPI overall score",
+                             SPI.INDEX.quintile_2022="2022 SPI overall score",
+                             ODIN.quintile_2016="2016 ODIN overall score",
+                             ODIN.quintile_2022="2022 ODIN overall score"
+                                         )) %>%  
+          bg(j = c('SPI.INDEX.quintile_2016'),
+             bg = scales::col_bin(col_palette, domain=c(0,100), bins=brks, reverse=TRUE))  %>%
+          bg(j = c('SPI.INDEX.quintile_2022'),
+             bg = scales::col_bin(col_palette, domain=c(0,100), bins=brks, reverse=TRUE)) %>%
+          bg(j = c('ODIN.quintile_2016'),
+             bg = scales::col_bin(col_palette, domain=c(0,100), bins=brks, reverse=TRUE)) %>%
+          bg(j = c('ODIN.quintile_2022'),
+             bg = scales::col_bin(col_palette, domain=c(0,100), bins=brks, reverse=TRUE)) %>%
+  autofit()
 ```
 
 
@@ -2391,6 +2537,63 @@ flextable(comb_tab) %>%
 ```
 
 
+Blank
+
+```{r}
+
+## COmbined table
+
+text_tab <- pval_df %>% 
+  mutate(rownum=row_number(), font_small=TRUE) %>%
+  mutate(GDB_text=paste(V2, V3, V4, V5, sep=", "),
+         ODB_text=paste(V6, V8, V9, V10, sep=", "),
+         ODIN_text=paste(V11, V12, V14, V15, sep=", "),
+         SCI_text=paste(V16, V17, V18, V20, sep=", "),
+         SPI_text=paste(V21, V22, V23, V24, sep=", ")) %>%
+  mutate(across(ends_with('_text'), ~gsub(", ,","",.))) %>%
+  select(SDG, ends_with('_text'))
+
+comb_tab <- tab %>% 
+  rename(SDG=var) %>%
+  mutate(rownum=row_number()) %>%
+  left_join(text_tab) %>%
+  arrange(rownum) %>%
+  select(SDG, starts_with("GDB"), starts_with("ODB"),
+         starts_with("ODIN"), starts_with("SCI"), starts_with("SPI"))
+
+
+flextable(comb_tab) %>%
+  set_header_labels(
+    SDG="SDG",
+    GDB="GDB", GDB_text="GDB",
+    ODB="ODB", ODB_text="ODB",
+    ODIN="ODIN", ODIN_text="ODIN",
+    SCI="SCI", SCI_text="SCI",
+    SPI="SPI", SPI_text="SPI"
+  ) %>%
+  
+  merge_at(i=1,j=2:3, part = 'header') %>%
+  merge_at(i=1,j=4:5, part = 'header') %>%
+  merge_at(i=1,j=6:7, part = 'header') %>%
+  merge_at(i=1,j=8:9, part = 'header') %>%
+  merge_at(i=1,j=10:11, part = 'header') %>% 
+  
+  fontsize(j = c(3,5,7,9,11), size = 6, part = "body") %>%
+  fontsize(j = c(1,2,4,6,8,10), size = 8, part = "body") %>%
+  
+  vline(j=1) %>%
+  vline(j=3) %>%
+  vline(j=5) %>%
+  vline(j=7) %>%
+  vline(j=9) %>%
+  align(i=1, part="header", align="center") %>%
+  autofit()
+
+
+
+```
+
+
 Table A.9.  Comparison of Statistical Indices to Key Development Indices
 
 ```{r}
@@ -2675,6 +2878,63 @@ flextable(comb_tab) %>%
   vline(j=17) %>%
   align(i=1, part="header", align="center") %>%
   align(i=which(is.na(font_small)), part='body', align='center') %>%
+  autofit()
+
+
+
+```
+
+
+Blank
+
+```{r}
+
+## COmbined table
+
+text_tab <- pval_df %>% 
+  mutate(rownum=row_number(), font_small=TRUE) %>%
+  mutate(GDB_text=paste(V2, V3, V4, V5, sep=", "),
+         ODB_text=paste(V6, V8, V9, V10, sep=", "),
+         ODIN_text=paste(V11, V12, V14, V15, sep=", "),
+         SCI_text=paste(V16, V17, V18, V20, sep=", "),
+         SPI_text=paste(V21, V22, V23, V24, sep=", ")) %>%
+  mutate(across(ends_with('_text'), ~gsub(", ,","",.))) %>%
+  select(`Dev Index`, ends_with('_text'))
+
+comb_tab <- tab %>% 
+  rename(`Dev Index`=var) %>%
+  mutate(rownum=row_number()) %>%
+  left_join(text_tab) %>%
+  arrange(rownum) %>%
+  select(`Dev Index`, starts_with("GDB"), starts_with("ODB"),
+         starts_with("ODIN"), starts_with("SCI"), starts_with("SPI"))
+
+
+flextable(comb_tab) %>%
+  set_header_labels(
+    `Dev Index`="Index",
+    GDB="GDB", GDB_text="GDB",
+    ODB="ODB", ODB_text="ODB",
+    ODIN="ODIN", ODIN_text="ODIN",
+    SCI="SCI", SCI_text="SCI",
+    SPI="SPI", SPI_text="SPI"
+  ) %>%
+  
+  merge_at(i=1,j=2:3, part = 'header') %>%
+  merge_at(i=1,j=4:5, part = 'header') %>%
+  merge_at(i=1,j=6:7, part = 'header') %>%
+  merge_at(i=1,j=8:9, part = 'header') %>%
+  merge_at(i=1,j=10:11, part = 'header') %>% 
+  
+  fontsize(j = c(3,5,7,9,11), size = 6, part = "body") %>%
+  fontsize(j = c(1,2,4,6,8,10), size = 8, part = "body") %>%
+  
+  vline(j=1) %>%
+  vline(j=3) %>%
+  vline(j=5) %>%
+  vline(j=7) %>%
+  vline(j=9) %>%
+  align(i=1, part="header", align="center") %>%
   autofit()
 
 
