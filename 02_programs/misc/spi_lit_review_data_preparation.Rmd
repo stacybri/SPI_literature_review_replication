@@ -401,6 +401,12 @@ press_free_df <- bind_rows(
   read_delim(paste0(raw_dir, "press_freedom_2019.csv"), delim=";"),
   read_delim(paste0(raw_dir, "press_freedom_2018.csv"), delim=";")
 ) %>%
+  mutate(Score=if_else(is.na(Score),`Score N`, Score )) %>%
+  mutate(Score=case_when(
+    Score<100 ~ Score,
+    between(Score,100,999) ~ Score/10,
+    TRUE ~ Score/100
+  )) %>% #fix issue with comma decimal separator  
   transmute(
     iso3c=ISO,
     press_free_score=Score,
@@ -937,6 +943,12 @@ press_free_df <- bind_rows(
   read_delim(paste0(raw_dir, "press_freedom_2019.csv"), delim=";"),
   read_delim(paste0(raw_dir, "press_freedom_2018.csv"), delim=";")
 ) %>%
+  mutate(Score=if_else(is.na(Score),`Score N`, Score )) %>%
+  mutate(Score=case_when(
+    Score<100 ~ Score,
+    between(Score,100,999) ~ Score/10,
+    TRUE ~ Score/100
+  )) %>% #fix issue with comma decimal separator  
   transmute(
     iso3c=ISO,
     press_free_score=Score,
@@ -1454,6 +1466,12 @@ press_free_df <- bind_rows(
   read_delim(paste0(raw_dir, "press_freedom_2019.csv"), delim=";"),
   read_delim(paste0(raw_dir, "press_freedom_2018.csv"), delim=";")
 ) %>%
+  mutate(Score=if_else(is.na(Score),`Score N`, Score )) %>%
+  mutate(Score=case_when(
+    Score<100 ~ Score,
+    between(Score,100,999) ~ Score/10,
+    TRUE ~ Score/100
+  )) %>% #fix issue with comma decimal separator  
   transmute(
     iso3c=ISO,
     press_free_score=Score,
@@ -1970,6 +1988,12 @@ press_free_df <- bind_rows(
   read_delim(paste0(raw_dir, "press_freedom_2019.csv"), delim=";"),
   read_delim(paste0(raw_dir, "press_freedom_2018.csv"), delim=";")
 ) %>%
+  mutate(Score=if_else(is.na(Score),`Score N`, Score )) %>%
+  mutate(Score=case_when(
+    Score<100 ~ Score,
+    between(Score,100,999) ~ Score/10,
+    TRUE ~ Score/100
+  )) %>% #fix issue with comma decimal separator  
   transmute(
     iso3c=ISO,
     press_free_score=Score,
@@ -2207,15 +2231,142 @@ write_excel_csv(comparison_avg_df, paste0(output_dir, "/SPI_Index_SDG_comparison
 ```{r regdf, echo=FALSE}
 
 
+sdg_index <- read_excel(path=paste0(raw_dir, "/SDR2023-data.xlsx"),
+                        sheet='Backdated SDG Index'
+) %>%
+  transmute(iso3c=`Country Code ISO3`,
+         date=year,
+         sdg_index_score=`SDG Index Score`) 
+
+
+#hdi
+hdi_df <- read_csv(paste0(raw_dir, 'HDR21-22_Composite_indices_complete_time_series.csv')) %>%
+  rename(iso3c=iso3) %>%
+  select(iso3c, hdi_1990:hdi_2021) %>%
+  pivot_longer(
+    cols=c('hdi_1990':'hdi_2021'),
+    names_to='index',
+    values_to='hdi_value'
+  ) %>%
+  mutate(
+    date=as.numeric(str_sub(index,5,8))
+  ) %>%
+  select(iso3c, date, hdi_value)
+
+
+#Yale’s Environmental Performance Index (https://epi.yale.edu/).  Downloaded Aug 24, 2023
+epi_2022_df <- read_csv(paste0(raw_dir, 'epi2022results05302022.csv')) %>%
+  rename(iso3c=iso,
+         env_perform_index=EPI.new) %>%
+  mutate(date=2022) %>%
+  select(iso3c, date, env_perform_index)
+
+epi_2020_df <- read_csv(paste0(raw_dir, 'epi2020results.csv')) %>%
+  rename(iso3c=iso,
+         env_perform_index=EPI.new) %>%
+  mutate(date=2020) %>%
+  select(iso3c, date, env_perform_index)
+
+epi_2018_df <- read_csv(paste0(raw_dir, 'epi2018results.csv')) %>%
+  rename(iso3c=iso,
+         env_perform_index=EPI.current) %>%
+  mutate(date=2018) %>%
+  select(iso3c, date, env_perform_index)
+
+epi_df <- bind_rows(epi_2022_df, epi_2020_df, epi_2018_df) %>%
+  select(iso3c, date, env_perform_index)
+
+##Harvard’s Economic complexity index (https://atlas.cid.harvard.edu/rankings).  Downloaded Aug 24, 2023
+ec_complex_df <- read_csv(paste0(raw_dir, "Country Complexity Rankings 1995 - 2021.csv")) %>%
+  select(iso3c, `ECI 1995`:`ECI 2021`) %>%
+  pivot_longer(
+    cols=c('ECI 1995':'ECI 2021'),
+    names_to='index',
+    values_to='eci_value'
+  ) %>%
+  mutate(
+    date=as.numeric(str_sub(index,5,8))
+  ) %>%
+  select(iso3c, date, eci_value)
+
+#World press freedom index (https://rsf.org/en/index).  Downloaded Aug 24, 2023
+press_free_df <- bind_rows(
+  read_delim(paste0(raw_dir, "press_freedom_2023.csv"), delim=";"),
+  read_delim(paste0(raw_dir, "press_freedom_2022.csv"), delim=";"),
+  read_delim(paste0(raw_dir, "press_freedom_2021.csv"), delim=";"),
+  read_delim(paste0(raw_dir, "press_freedom_2020.csv"), delim=";"),
+  read_delim(paste0(raw_dir, "press_freedom_2019.csv"), delim=";"),
+  read_delim(paste0(raw_dir, "press_freedom_2018.csv"), delim=";")
+) %>%
+  mutate(Score=if_else(is.na(Score),`Score N`, Score )) %>%
+  mutate(Score=case_when(
+    Score<100 ~ Score,
+    between(Score,100,999) ~ Score/10,
+    TRUE ~ Score/100
+  )) %>% #fix issue with comma decimal separator
+  transmute(
+    iso3c=ISO,
+    press_free_score=Score,
+    date=`Year (N)`
+  ) 
+
+#OECD’s better life index (https://www.oecdbetterlifeindex.org/#/11111111111).  Downloaded Aug 24, 2023.  Only one year of data as not comparable over time.
+#OECD’s better life index (https://www.oecdbetterlifeindex.org/#/11111111111).  Downloaded Aug 24, 2023.  Only one year of data as not comparable over time.
+bli_df <- read_csv(paste0(raw_dir, 'BLI_20230824.csv')) %>% mutate(date=2018) %>%
+  bind_rows(read_csv(paste0(raw_dir, 'BLI_2017_20230824.csv')) %>% mutate(date=2017)) %>%
+  bind_rows(read_csv(paste0(raw_dir, 'BLI_2016_20230824.csv')) %>% mutate(date=2016)) %>%  bind_rows(read_csv(paste0(raw_dir, 'BLI_2015_20230824.csv')) %>% mutate(date=2015)) %>%  bind_rows(read_csv(paste0(raw_dir, 'BLI_2014_20230824.csv')) %>% mutate(date=2014)) %>%  bind_rows(read_csv(paste0(raw_dir, 'BLI_2013_20230824.csv')) %>% mutate(date=2013)) %>%  rename(iso3c=LOCATION) %>%
+  mutate(
+    category=case_when(
+      Indicator %in% c("Housing expenditure", "Dwellings without basic facilities", "Rooms per person") ~ "Housing",
+      Indicator %in% c("Household net wealth", "Household net adjusted disposable income") ~ "Income",
+      Indicator %in% c('Labour market insecurity', 'Personal earnings', 'Long-term unemployment rate', 'Employment rate') ~ "Jobs",
+      Indicator %in% c('Quality of support network') ~ "Community",
+      Indicator %in% c('Years in education','Student skills','Educational attainment') ~ "Education",
+      Indicator %in% c('Water quality', "Air pollution") ~ "Environment",
+      Indicator %in% c('Stakeholder engagement for developing regulations', 'Voter turnout') ~ "Civic engagement",
+      Indicator %in% c('Self-reported health', 'Life expectancy') ~ "Health",
+      Indicator %in% c('Life satisfaction') ~ "Life satisfaction",
+      Indicator %in% c('Homicide rate', 'Feeling safe walking alone at night') ~ "Safety",
+      Indicator %in% c('Time devoted to leisure and personal care','Employees working very long hours') ~ "Work-Life Balance"
+      
+    )
+  ) %>%
+  group_by(Indicator, date) %>%
+  mutate(
+    score=case_when(#give 1 to a best perfomer and 0 to worst
+      Indicator %in% c("Housing expenditure", "Dwellings without basic facilities",
+                       'Labour market insecurity','Long-term unemployment rate',
+                       "Air pollution", 'Homicide rate', 'Employees working very long hours') ~
+        1-(Value-min(Value))/(max(Value)-min(Value)),
+      TRUE ~ 
+        (Value-min(Value))/(max(Value)-min(Value))
+    )
+  ) %>%
+  #zscore all indicators
+  mutate(zscore=(Value-mean(Value, na.rm=TRUE))/sd(Value, na.rm=TRUE)) %>%
+  group_by(iso3c,category, date  ) %>%
+  #combine indicators with equal weight
+  summarise(better_life_subindex=mean(score, na.rm=TRUE)) %>%
+  group_by(iso3c, date) %>%
+  summarise(better_life_index=sum(better_life_subindex)) 
+
+
 predictors_df <- wbstats::wb_data(country="countries_only",
              indicator=c('NY.GDP.PCAP.KD', 'NV.IND.MANF.ZS', 'NV.AGR.TOTL.ZS','NE.TRD.GNFS.ZS', 'HD.HCI.OVRL','SE.PRM.ENRR','BN.CAB.XOKA.GD.ZS', 'CC.EST', "GE.EST", 'PV.EST', "RQ.EST", "RL.EST", "VA.EST", "BX.KLT.DINV.WD.GD.ZS", "SI.POV.DDAY", "SI.POV.GINI"),
              start_date=2010,
              end_date=2022) %>%
   mutate(date=as.numeric(date)) %>%
   left_join(sdg_index) %>%
+  left_join(hdi_df) %>%
+  left_join(epi_df) %>%
+  left_join(ec_complex_df) %>%
+  left_join(press_free_df) %>%
+  left_join(bli_df) %>%  
   arrange(iso3c, date) %>%
   group_by(iso3c) %>%
-  fill(c( 'NY.GDP.PCAP.KD','NV.IND.MANF.ZS', 'NV.AGR.TOTL.ZS', 'SE.PRM.ENRR', 'HD.HCI.OVRL','NE.TRD.GNFS.ZS','BN.CAB.XOKA.GD.ZS', 'CC.EST', "GE.EST", 'PV.EST', "RQ.EST", "RL.EST", "VA.EST", "BX.KLT.DINV.WD.GD.ZS","SI.POV.DDAY", "SI.POV.GINI", "sdg_index_score"), .direction="downup") %>%
+  fill(c( 'NY.GDP.PCAP.KD','NV.IND.MANF.ZS', 'NV.AGR.TOTL.ZS', 'SE.PRM.ENRR', 'HD.HCI.OVRL','NE.TRD.GNFS.ZS','BN.CAB.XOKA.GD.ZS', 'CC.EST', "GE.EST", 'PV.EST', "RQ.EST", "RL.EST", "VA.EST", "BX.KLT.DINV.WD.GD.ZS","SI.POV.DDAY", "SI.POV.GINI",
+          'sdg_index_score', 'hdi_value', 'env_perform_index', 'eci_value', 
+          'press_free_score', 'better_life_index'), .direction="downup") %>%
   mutate(WGI.OVL=(CC.EST + GE.EST + PV.EST + RQ.EST + RL.EST + VA.EST)/6,
          lag_outcome=lag(NY.GDP.PCAP.KD),
          lag_fdi=lag(BX.KLT.DINV.WD.GD.ZS),

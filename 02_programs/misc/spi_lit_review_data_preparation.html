@@ -710,6 +710,12 @@ press_free_df &lt;- bind_rows(
   read_delim(paste0(raw_dir, &quot;press_freedom_2019.csv&quot;), delim=&quot;;&quot;),
   read_delim(paste0(raw_dir, &quot;press_freedom_2018.csv&quot;), delim=&quot;;&quot;)
 ) %&gt;%
+  mutate(Score=if_else(is.na(Score),`Score N`, Score )) %&gt;%
+  mutate(Score=case_when(
+    Score&lt;100 ~ Score,
+    between(Score,100,999) ~ Score/10,
+    TRUE ~ Score/100
+  )) %&gt;% #fix issue with comma decimal separator  
   transmute(
     iso3c=ISO,
     press_free_score=Score,
@@ -1077,6 +1083,12 @@ press_free_df &lt;- bind_rows(
   read_delim(paste0(raw_dir, &quot;press_freedom_2019.csv&quot;), delim=&quot;;&quot;),
   read_delim(paste0(raw_dir, &quot;press_freedom_2018.csv&quot;), delim=&quot;;&quot;)
 ) %&gt;%
+  mutate(Score=if_else(is.na(Score),`Score N`, Score )) %&gt;%
+  mutate(Score=case_when(
+    Score&lt;100 ~ Score,
+    between(Score,100,999) ~ Score/10,
+    TRUE ~ Score/100
+  )) %&gt;% #fix issue with comma decimal separator  
   transmute(
     iso3c=ISO,
     press_free_score=Score,
@@ -1433,6 +1445,12 @@ press_free_df &lt;- bind_rows(
   read_delim(paste0(raw_dir, &quot;press_freedom_2019.csv&quot;), delim=&quot;;&quot;),
   read_delim(paste0(raw_dir, &quot;press_freedom_2018.csv&quot;), delim=&quot;;&quot;)
 ) %&gt;%
+  mutate(Score=if_else(is.na(Score),`Score N`, Score )) %&gt;%
+  mutate(Score=case_when(
+    Score&lt;100 ~ Score,
+    between(Score,100,999) ~ Score/10,
+    TRUE ~ Score/100
+  )) %&gt;% #fix issue with comma decimal separator  
   transmute(
     iso3c=ISO,
     press_free_score=Score,
@@ -1790,6 +1808,12 @@ press_free_df &lt;- bind_rows(
   read_delim(paste0(raw_dir, &quot;press_freedom_2019.csv&quot;), delim=&quot;;&quot;),
   read_delim(paste0(raw_dir, &quot;press_freedom_2018.csv&quot;), delim=&quot;;&quot;)
 ) %&gt;%
+  mutate(Score=if_else(is.na(Score),`Score N`, Score )) %&gt;%
+  mutate(Score=case_when(
+    Score&lt;100 ~ Score,
+    between(Score,100,999) ~ Score/10,
+    TRUE ~ Score/100
+  )) %&gt;% #fix issue with comma decimal separator  
   transmute(
     iso3c=ISO,
     press_free_score=Score,

@@ -2,10 +2,14 @@
 title: "Replication package for: Reviewing Assessment Tools for Measuring Country Statistical Capacity"
 author: "Brian Stacy"
 date: "8/16/2023"
-format: docx
+format: 
+  docx:
+    reference-doc: custom-reference-doc.docx
+    number-sections: false
 execute:
   echo: false
   warning: false
+dpi: 400
 ---
 
 ```{r}
@@ -1760,15 +1764,15 @@ vol_num <- volatility_scatter_df <- volatility_df %>%
 
 rou_num1 <- vol_num %>% filter(iso3c=="ROU") %>% filter(indicator=="SPI Overall Score") %>% pluck(7)
 rou_num2 <- vol_num %>% filter(iso3c=="ROU") %>% filter(indicator=="SPI Overall Score") %>% pluck(8)
-rou_diff <- rou_num2-rou_num1
+rou_diff <- abs(rou_num2-rou_num1)
 
 srb_num1 <- vol_num %>% filter(iso3c=="SRB") %>% filter(indicator=="SPI Overall Score") %>% pluck(8)
 srb_num2 <- vol_num %>% filter(iso3c=="SRB") %>% filter(indicator=="SPI Overall Score") %>% pluck(9)
-srb_diff <- srb_num2-srb_num1
+srb_diff <- abs(srb_num2-srb_num1)
 
 ukr_num1 <- vol_num %>% filter(iso3c=="UKR") %>% filter(indicator=="SPI Overall Score") %>% pluck(5)
 ukr_num2 <- vol_num %>% filter(iso3c=="UKR") %>% filter(indicator=="SPI Overall Score") %>% pluck(6)
-ukr_diff <- ukr_num2-ukr_num1
+ukr_diff <- abs(ukr_num2-ukr_num1)
 
 (rou_diff + srb_diff + ukr_diff)/3
 
@@ -1926,9 +1930,9 @@ ggplot(fig, aes(x=var, y=abs(SPI...1))) +
 #| label: devcordf
 
 
-devindex <- c( 'HD.HCI.OVRL', 'hdi_value', 'env_perform_index', 'eci_value', 'press_free_score', 'better_life_index')
+devindex <- c( 'eci_value','env_perform_index', 'better_life_index', 'hdi_value','HD.HCI.OVRL',   'press_free_score')
 
-devindex_names <- c( 'WB Human Capital Index', "UN Human Development Index", 'Environmental Performance Index','Economic Complexity Index','World Press Freedom Index', 'OECD Better Life Index')
+devindex_names <- c('Economic Complexity Index','Environmental Performance Index','OECD Better Life Index', "UN Human Development Index", 'WB Human Capital Index','World Press Freedom Index' )
 
 #get correlations with pvalues
 index_cor_full <- comparison_df %>%
@@ -2540,6 +2544,123 @@ flextable(comb_tab) %>%
 Blank
 
 ```{r}
+#get correlations with pvalues
+index_cor_full <- comparison_df %>%
+  select(c('gdb','odb','ODIN_score', 'SCI', 'SPI.INDEX' ),sdgs) %>%
+  rename(
+    SPI=SPI.INDEX,
+    SCI=SCI, 
+    ODIN=ODIN_score, 
+    ODB=odb, 
+    GDB=gdb
+  ) %>%
+  as.matrix() %>%
+  rcorr()
+
+#get just pearon correlation
+index_cor <- index_cor_full$r
+index_cor <- index_cor[6:23,1:5]
+
+#get correlation between indices
+index_between_cor <- index_cor_full$r
+index_between_cor <- index_between_cor[1:5,1:5]
+
+#get Ns
+index_n <- index_cor_full$n
+index_n <- index_n[6:23,1:5]
+
+
+#round
+index_cor <- round(index_cor,2)
+
+#color
+index_col <- index_cor
+index_col[abs(index_cor)>=0.5] <- "#fcca46"
+index_col[abs(index_cor)>=0.65] <- "#a1c181"
+index_col[abs(index_cor)>=0.8] <- "#619b8a"
+index_col[abs(index_cor)<0.5] <- "white"
+
+#get statistical significance
+index_sig <- index_cor_full$P
+index_sig <- index_sig[6:23,1:5]
+
+rownames(index_cor) <- sdg_names
+rownames(index_sig) <- sdg_names 
+
+
+
+# Create a correlation matrix
+cor_matrix <- index_cor
+
+# Function to calculate p-value from z-score
+p_value_from_z <- function(z) {
+  2 * (1 - pnorm(abs(z)))
+}
+
+# Iterate through the correlation matrix
+n <- nrow(cor_matrix)
+c <- ncol(cor_matrix)
+p_values <- matrix(NA, n, c*c)  # Store p-values for each pairwise comparison
+
+for (i in 1:n) {
+  for (j in 1:c) {
+    for (k in 1:c) {
+      
+      
+      row1 <- i
+      col1 <- j
+      correlation_1 <- cor_matrix[row1,col1]
+      
+      row2 <- i
+      col2 <- k
+      correlation_2 <- cor_matrix[row2, col2]
+      
+      #between correlation
+      correlation_between <- index_between_cor[col1,col2]
+      
+      # Step 3: Calculate standard errors of z-transformed correlations
+      n_1 <- index_n[row1,col1]  # Sample size for correlation_1
+      n_2 <- index_n[row2,col2]  # Sample size for correlation_2
+      n_min <- min(n_1,n_2)
+
+      
+      # Step 4: Perform z-test for the difference between z-scores. pearson1898: Pearson and Filon’s [7] z
+      kfactor = correlation_between*(1-correlation_1^2-correlation_2^2)-0.5*(correlation_1*correlation_2)*(1-correlation_1^2-correlation_2^2-correlation_between^2)
+      z_diff <- sqrt(n_min)*(correlation_1-correlation_2)/sqrt((1-correlation_1^2)^2+(1-correlation_2^2)^2-2*kfactor)
+      
+      if (is.na(z_diff)) {
+        z_diff=0
+      }
+      # Calculate p-value
+      pos <- (j-1)*5+k
+      pval <- p_value_from_z(z_diff)
+      
+      if (k==1 & pval > 0.05)  {
+        txt <- "GDB"
+      } else if (k==2 & pval > 0.05) {
+        txt <- "ODB"
+      } else if (k==3  & pval > 0.05) {
+        txt <- "ODIN"
+      } else if (k==4  & pval > 0.05) {
+        txt <- "SCI"
+      } else if (k==5  & pval > 0.05) {
+        txt <- "SPI"
+      } else {
+        txt <- ""
+      }
+      p_values[i, pos] <- txt
+    }
+  }
+}
+
+#format as table
+pval_df <- as.data.frame(p_values) %>%
+  cbind(SDG=sdg_names) %>%
+  select(-V1, -V7, -V13, -V19, -V25) %>%
+  select(SDG, everything()) 
+```
+
+```{r}
 
 ## COmbined table
 
@@ -2888,6 +3009,125 @@ flextable(comb_tab) %>%
 Blank
 
 ```{r}
+#get correlations with pvalues
+index_cor_full <- comparison_df %>%
+  select(c('gdb','odb','ODIN_score', 'SCI', 'SPI.INDEX' ),devindex) %>%
+  rename(
+    SPI=SPI.INDEX,
+    SCI=SCI, 
+    ODIN=ODIN_score, 
+    ODB=odb, 
+    GDB=gdb
+  ) %>%
+  as.matrix() %>%
+  rcorr()
+
+#get just pearon correlation
+index_cor <- index_cor_full$r
+index_cor <- index_cor[6:11,1:5]
+
+#get correlation between indices
+index_between_cor <- index_cor_full$r
+index_between_cor <- index_between_cor[1:5,1:5]
+
+#get Ns
+index_n <- index_cor_full$n
+index_n <- index_n[6:11,1:5]
+
+
+#round
+index_cor <- round(index_cor,2)
+
+#color
+index_col <- index_cor
+index_col[abs(index_cor)>=0.5] <- "#fcca46"
+index_col[abs(index_cor)>=0.65] <- "#a1c181"
+index_col[abs(index_cor)>=0.8] <- "#619b8a"
+index_col[abs(index_cor)<0.5] <- "white"
+
+#get statistical significance
+index_sig <- index_cor_full$P
+index_sig <- index_sig[6:11,1:5]
+
+rownames(index_cor) <- devindex_names
+rownames(index_sig) <- devindex_names 
+
+
+
+# Create a correlation matrix
+cor_matrix <- index_cor
+
+# Function to calculate p-value from z-score
+p_value_from_z <- function(z) {
+  2 * (1 - pnorm(abs(z)))
+}
+
+# Iterate through the correlation matrix
+n <- nrow(cor_matrix)
+c <- ncol(cor_matrix)
+p_values <- matrix(NA, n, c*c)  # Store p-values for each pairwise comparison
+
+for (i in 1:n) {
+  for (j in 1:c) {
+    for (k in 1:c) {
+      
+      
+      row1 <- i
+      col1 <- j
+      correlation_1 <- cor_matrix[row1,col1]
+      
+      row2 <- i
+      col2 <- k
+      correlation_2 <- cor_matrix[row2, col2]
+      
+      #between correlation
+      correlation_between <- index_between_cor[col1,col2]
+      
+      # Step 3: Calculate standard errors of z-transformed correlations
+      n_1 <- index_n[row1,col1]  # Sample size for correlation_1
+      n_2 <- index_n[row2,col2]  # Sample size for correlation_2
+      n_min <- min(n_1,n_2)
+
+      
+      # Step 4: Perform z-test for the difference between z-scores. pearson1898: Pearson and Filon’s [7] z
+      kfactor = correlation_between*(1-correlation_1^2-correlation_2^2)-0.5*(correlation_1*correlation_2)*(1-correlation_1^2-correlation_2^2-correlation_between^2)
+      z_diff <- sqrt(n_min)*(correlation_1-correlation_2)/sqrt((1-correlation_1^2)^2+(1-correlation_2^2)^2-2*kfactor)
+      
+      if (is.na(z_diff)) {
+        z_diff=0
+      }
+      # Calculate p-value
+      pos <- (j-1)*5+k
+      pval <- p_value_from_z(z_diff)
+      
+      if (k==1 & pval > 0.05)  {
+        txt <- "GDB"
+      } else if (k==2 & pval > 0.05) {
+        txt <- "ODB"
+      } else if (k==3  & pval > 0.05) {
+        txt <- "ODIN"
+      } else if (k==4  & pval > 0.05) {
+        txt <- "SCI"
+      } else if (k==5  & pval > 0.05) {
+        txt <- "SPI"
+      } else {
+        txt <- ""
+      }
+      p_values[i, pos] <- txt
+    }
+  }
+}
+
+#format as table
+pval_df <- as.data.frame(p_values) %>%
+  cbind(`Dev Index`=devindex_names) %>%
+  select(-V1, -V7, -V13, -V19, -V25) %>%
+  select(`Dev Index`, everything()) 
+
+```
+
+
+```{r}
 
 ## COmbined table
 
@@ -2938,6 +3178,52 @@ flextable(comb_tab) %>%
   autofit()
 
 
+
+```
+
+
+```{r}
+#test differences between models
+#step 1 combine data
+combined_test_data <- bind_rows(comparison_df %>% mutate(model='SPI', index=SPI.INDEX) ,
+                           comparison_df %>% mutate(model='SCI', index=SCI),
+                           comparison_df %>% mutate(model='ODIN', index=ODIN_score),
+                           comparison_df %>% mutate(model='ODB', index=odb),
+                           comparison_df %>% mutate(model='GDB', index=gdb)
+                           ) %>%
+  mutate(model=factor(model, levels=c('SPI', "SCI",'ODIN','ODB','GDB')))
+
+
+#model1
+test_models <- list(
+"Economic Complexity Index" = feols(eci_value ~  index*model + model, data=combined_test_data, se='cluster', cluster='country'),
+
+"Environmental Performance Index" = feols(env_perform_index ~  index*model + model, data=combined_test_data, se='cluster', cluster='country'),
+
+"OECD Better Life Index" = feols(better_life_index ~  index*model + model, data=combined_test_data, se='cluster', cluster='country'),
+
+"UN Human Development Index" = feols(hdi_value ~  index*model + model, data=combined_test_data, se='cluster', cluster='country'),
+
+"WB Human Capital Index" = feols(HD.HCI.OVRL ~  index*model + model, data=combined_test_data, se='cluster', cluster='country'),
+
+"World Press Freedom Index" = feols(press_free_score ~  index*model + model, data=combined_test_data, se='cluster', cluster='country')
+
+
+)
+
+modelsummary(test_models,
+             estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_map = c('index'='SPI',
+                           'index:modelSCI'='SPI-SCI',
+                           'index:modelODIN' = 'SPI-ODIN',
+                           'index:modelODB' = 'SPI-ODB',
+                           'index:modelGDB' = 'SPI-GDB'),
+              notes=" Note: * p<0.10, ** p<0.05, *** p<0.01. Standard errors are clustered at the country level.",
+              stars = c('*' = .1, '**' = .05, '***' = .01),
+              fmt = fmt_statistic("estimate" = 3, "std.error" = 2),
+              escape = FALSE
+              )
 
 ```
 
@@ -3057,7 +3343,8 @@ gdb_reg_df <- read_csv(paste0(output_dir, "/GDB_formatted_data.csv")) %>%
 #modelsummary output
 gm <- tibble::tribble(
   ~raw,        ~clean,          ~fmt,
-  "nobs",      "N",             0)
+  "nobs",      "N",             0,
+  'r.squared', "R<sup>2</sup>", 3)
 
 
 
@@ -3114,12 +3401,15 @@ modelsummary(models,
               notes="Note: * p<0.10, ** p<0.05, *** p<0.01. Standard errors are clustered at the country level. Data are from the World Bank's World Development Indicators (WDI) and SPI. In cases where data are missing for a particular covariate, the data are imputed forward using the nearest available value.",
               stars = c('*' = .1, '**' = .05, '***' = .01),
               fmt = fmt_statistic("estimate" = 3, "std.error" = 2),
-              escape = FALSE
+              escape = FALSE,
+             gof_map=gm
               ) 
 
 
 p <- plm::plm(log(NY.GDP.PCAP.KD) ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
 print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+summary(p)
 
 p <- plm::plm(log(NY.GDP.PCAP.KD) ~  SPI.INDEX + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + WGI.OVL, index=c('country', 'date'), data=reg_df, model='random') 
 print(paste0("Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
@@ -3196,7 +3486,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 ```{r}
 p <- plm::plm(WGI.OVL ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
 print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
-
+summary(p)
 p <- plm::plm(WGI.OVL~  SPI.INDEX + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=reg_df, model='random') 
 print(paste0("Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
 
@@ -3208,8 +3498,310 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 
 
 ```
+## Table A.10.  Relationship between the Economic Complexity Index and SPI scores, 2016-2022
 
-## Table A.10.  Relationship between the SDG Index Overall Score from the 2023 Sustainable Development Report and SPI scores, 2016-2022
+```{r}
+
+#create regression models
+ SDG_models <- list(
+
+ 'Model 1' = feols(eci_value ~  SPI.INDEX , data=reg_df, se='cluster', cluster='country') ,
+
+
+ 'Model 2' = feols(eci_value ~  SPI.INDEX  + factor(date) | country, data=reg_df, se='cluster', cluster='country') ,
+
+ 'Model 3' = feols(eci_value ~  SPI.INDEX  + log(NY.GDP.PCAP.KD) + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR    + factor(date)| country , data=reg_df, se='cluster', cluster='country'),
+ 
+ 'Model 4' = feols(eci_value ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5 , data=reg_df, se='cluster', cluster='country') ,
+
+
+ 'Model 5' = feols(eci_value ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5    + factor(date) | country, data=reg_df, se='cluster', cluster='country') ,
+
+ 'Model 6' = feols(eci_value ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5  +   log(NY.GDP.PCAP.KD) + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR    + factor(date)| country , data=reg_df, se='cluster', cluster='country')
+ 
+
+ )
+modelsummary(SDG_models,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_map = c("SPI.INDEX"  = "Overall SPI Score",
+                              "SPI.INDEX.PIL1"  = "SPI Pillar 1 Score (Data use)",
+                              "SPI.INDEX.PIL2"  = "SPI Pillar 2 Score (Data services)",
+                              "SPI.INDEX.PIL3"  = "SPI Pillar 3 Score (Data products)",
+                              "SPI.INDEX.PIL4"  = "SPI Pillar 4 Score (Data sources)",
+                              "SPI.INDEX.PIL5"  = "SPI Pillar 5 Score (Data infrastructure)",
+                              "log(NY.GDP.PCAP.KD)" = "Log GDP per capita (constant 2015 US$)",
+                              "NE.TRD.GNFS.ZS" = "Trade (% of GDP)",
+                              "NV.AGR.TOTL.ZS"= "Agriculture, forestry, fishing value added (% of GDP)",
+                              "NV.IND.MANF.ZS"  = "Manufacturing value added (% of GDP)",
+                              "SE.PRM.ENRR" = "School Enrollment, Primary (% gross)" ,
+                              "WGI.OVL" = "WGI Index",
+                              "factor(date)2017"="Year 2017",
+                              "factor(date)2018"="Year 2018",
+                              "factor(date)2019"="Year 2019",
+                              "factor(date)2020"="Year 2020",
+                              "factor(date)2021"="Year 2021",
+                              "factor(date)2022"="Year 2022",
+                              "(Intercept)" = "Constant",
+                              "CC.EST" = "WGI: Control of Corruption: Estimate",
+                              "GE.EST" = "WGI: Governance Effectiveness: Estimate",
+                              "PV.EST" = "WGI: Political Stability and Absence of Violence/Terrorism: Estimate",
+                              "RQ.EST" = "WGI: Regulatory Quality: Estimate",
+                              "RL.EST" = "WGI: Rule of Law: Estimate",
+                              "VA.EST" = "WGI: Voice and Accountability: Estimate"),
+              notes="Note: * p<0.10, ** p<0.05, *** p<0.01. Standard errors are clustered at the country level. Data are from the World Bank's World Development Indicators (WDI) and SPI. In cases where data are missing for a particular covariate, the data are imputed forward using the nearest available value.",
+              stars = c('*' = .1, '**' = .05, '***' = .01),
+              fmt = fmt_statistic("estimate" = 3, "std.error" = 2),
+              escape = FALSE
+              )
+```
+
+
+```{r}
+p <- plm::plm(eci_value ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+summary(p)
+p <- plm::plm(eci_value~  SPI.INDEX + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(eci_value ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5, index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 5: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(eci_value ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5 + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=reg_df, model='random')
+print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+
+```
+
+## Table A.11.  Relationship between the Environmental Performance Index and SPI scores, 2016-2022
+
+```{r}
+
+#create regression models
+ SDG_models <- list(
+
+ 'Model 1' = feols(env_perform_index ~  SPI.INDEX , data=reg_df, se='cluster', cluster='country') ,
+
+
+ 'Model 2' = feols(env_perform_index ~  SPI.INDEX  + factor(date) | country, data=reg_df, se='cluster', cluster='country') ,
+
+ 'Model 3' = feols(env_perform_index ~  SPI.INDEX  + log(NY.GDP.PCAP.KD) + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR    + factor(date)| country , data=reg_df, se='cluster', cluster='country'),
+ 
+ 'Model 4' = feols(env_perform_index ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5 , data=reg_df, se='cluster', cluster='country') ,
+
+
+ 'Model 5' = feols(env_perform_index ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5    + factor(date) | country, data=reg_df, se='cluster', cluster='country') ,
+
+ 'Model 6' = feols(env_perform_index ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5  +   log(NY.GDP.PCAP.KD) + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR    + factor(date)| country , data=reg_df, se='cluster', cluster='country')
+ 
+
+ )
+ modelsummary(SDG_models,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_map = c("SPI.INDEX"  = "Overall SPI Score",
+                              "SPI.INDEX.PIL1"  = "SPI Pillar 1 Score (Data use)",
+                              "SPI.INDEX.PIL2"  = "SPI Pillar 2 Score (Data services)",
+                              "SPI.INDEX.PIL3"  = "SPI Pillar 3 Score (Data products)",
+                              "SPI.INDEX.PIL4"  = "SPI Pillar 4 Score (Data sources)",
+                              "SPI.INDEX.PIL5"  = "SPI Pillar 5 Score (Data infrastructure)",
+                              "log(NY.GDP.PCAP.KD)" = "Log GDP per capita (constant 2015 US$)",
+                              "NE.TRD.GNFS.ZS" = "Trade (% of GDP)",
+                              "NV.AGR.TOTL.ZS"= "Agriculture, forestry, fishing value added (% of GDP)",
+                              "NV.IND.MANF.ZS"  = "Manufacturing value added (% of GDP)",
+                              "SE.PRM.ENRR" = "School Enrollment, Primary (% gross)" ,
+                              "WGI.OVL" = "WGI Index",
+                              "factor(date)2017"="Year 2017",
+                              "factor(date)2018"="Year 2018",
+                              "factor(date)2019"="Year 2019",
+                              "factor(date)2020"="Year 2020",
+                              "factor(date)2021"="Year 2021",
+                              "factor(date)2022"="Year 2022",
+                              "(Intercept)" = "Constant",
+                              "CC.EST" = "WGI: Control of Corruption: Estimate",
+                              "GE.EST" = "WGI: Governance Effectiveness: Estimate",
+                              "PV.EST" = "WGI: Political Stability and Absence of Violence/Terrorism: Estimate",
+                              "RQ.EST" = "WGI: Regulatory Quality: Estimate",
+                              "RL.EST" = "WGI: Rule of Law: Estimate",
+                              "VA.EST" = "WGI: Voice and Accountability: Estimate"),
+              notes="Note: * p<0.10, ** p<0.05, *** p<0.01. Standard errors are clustered at the country level. Data are from the World Bank's World Development Indicators (WDI) and SPI. In cases where data are missing for a particular covariate, the data are imputed forward using the nearest available value.",
+              stars = c('*' = .1, '**' = .05, '***' = .01),
+              fmt = fmt_statistic("estimate" = 3, "std.error" = 2),
+              escape = FALSE
+              )
+```
+
+
+```{r}
+p <- plm::plm(env_perform_index ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+summary(p)
+
+p <- plm::plm(env_perform_index~  SPI.INDEX + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(env_perform_index ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5, index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 5: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(env_perform_index ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5 + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=reg_df, model='random')
+print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+
+```
+
+## Table A.12.  Relationship between the OECD Better Life Index and SPI scores, 2016-2022
+
+```{r}
+
+#create regression models
+ SDG_models <- list(
+
+ 'Model 1' = feols(better_life_index ~  SPI.INDEX , data=reg_df, se='cluster', cluster='country') ,
+
+
+ 'Model 2' = feols(better_life_index ~  SPI.INDEX  + factor(date) | country, data=reg_df, se='cluster', cluster='country') ,
+
+ 'Model 3' = feols(better_life_index ~  SPI.INDEX  + log(NY.GDP.PCAP.KD) + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR    + factor(date)| country , data=reg_df, se='cluster', cluster='country'),
+ 
+ 'Model 4' = feols(better_life_index ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5 , data=reg_df, se='cluster', cluster='country') ,
+
+
+ 'Model 5' = feols(better_life_index ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5    + factor(date) | country, data=reg_df, se='cluster', cluster='country') ,
+
+ 'Model 6' = feols(better_life_index ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5  +   log(NY.GDP.PCAP.KD) + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR    + factor(date)| country , data=reg_df, se='cluster', cluster='country')
+ 
+
+ )
+ modelsummary(SDG_models,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_map = c("SPI.INDEX"  = "Overall SPI Score",
+                              "SPI.INDEX.PIL1"  = "SPI Pillar 1 Score (Data use)",
+                              "SPI.INDEX.PIL2"  = "SPI Pillar 2 Score (Data services)",
+                              "SPI.INDEX.PIL3"  = "SPI Pillar 3 Score (Data products)",
+                              "SPI.INDEX.PIL4"  = "SPI Pillar 4 Score (Data sources)",
+                              "SPI.INDEX.PIL5"  = "SPI Pillar 5 Score (Data infrastructure)",
+                              "log(NY.GDP.PCAP.KD)" = "Log GDP per capita (constant 2015 US$)",
+                              "NE.TRD.GNFS.ZS" = "Trade (% of GDP)",
+                              "NV.AGR.TOTL.ZS"= "Agriculture, forestry, fishing value added (% of GDP)",
+                              "NV.IND.MANF.ZS"  = "Manufacturing value added (% of GDP)",
+                              "SE.PRM.ENRR" = "School Enrollment, Primary (% gross)" ,
+                              "WGI.OVL" = "WGI Index",
+                              "factor(date)2017"="Year 2017",
+                              "factor(date)2018"="Year 2018",
+                              "factor(date)2019"="Year 2019",
+                              "factor(date)2020"="Year 2020",
+                              "factor(date)2021"="Year 2021",
+                              "factor(date)2022"="Year 2022",
+                              "(Intercept)" = "Constant",
+                              "CC.EST" = "WGI: Control of Corruption: Estimate",
+                              "GE.EST" = "WGI: Governance Effectiveness: Estimate",
+                              "PV.EST" = "WGI: Political Stability and Absence of Violence/Terrorism: Estimate",
+                              "RQ.EST" = "WGI: Regulatory Quality: Estimate",
+                              "RL.EST" = "WGI: Rule of Law: Estimate",
+                              "VA.EST" = "WGI: Voice and Accountability: Estimate"),
+              notes="Note: * p<0.10, ** p<0.05, *** p<0.01. Standard errors are clustered at the country level. Data are from the World Bank's World Development Indicators (WDI) and SPI. In cases where data are missing for a particular covariate, the data are imputed forward using the nearest available value.",
+              stars = c('*' = .1, '**' = .05, '***' = .01),
+              fmt = fmt_statistic("estimate" = 3, "std.error" = 2),
+              escape = FALSE
+              )
+```
+
+
+```{r}
+p <- plm::plm(better_life_index ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2))) 
+summary(p)
+
+p <- plm::plm(better_life_index~  SPI.INDEX + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(better_life_index ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5, index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 5: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(better_life_index ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5 + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=reg_df, model='random')
+print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+
+```
+
+## Table A.13.  Relationship between the UN Human Development Index and SPI scores, 2016-2022
+
+```{r}
+
+#create regression models
+ SDG_models <- list(
+
+ 'Model 1' = feols(hdi_value ~  SPI.INDEX , data=reg_df, se='cluster', cluster='country') ,
+
+
+ 'Model 2' = feols(hdi_value ~  SPI.INDEX  + factor(date) | country, data=reg_df, se='cluster', cluster='country') ,
+
+ 'Model 3' = feols(hdi_value ~  SPI.INDEX  + log(NY.GDP.PCAP.KD) + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR    + factor(date)| country , data=reg_df, se='cluster', cluster='country'),
+ 
+ 'Model 4' = feols(hdi_value ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5 , data=reg_df, se='cluster', cluster='country') ,
+
+
+ 'Model 5' = feols(hdi_value ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5    + factor(date) | country, data=reg_df, se='cluster', cluster='country') ,
+
+ 'Model 6' = feols(hdi_value ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5  +   log(NY.GDP.PCAP.KD) + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR    + factor(date)| country , data=reg_df, se='cluster', cluster='country')
+ 
+
+ )
+ modelsummary(SDG_models,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_map = c("SPI.INDEX"  = "Overall SPI Score",
+                              "SPI.INDEX.PIL1"  = "SPI Pillar 1 Score (Data use)",
+                              "SPI.INDEX.PIL2"  = "SPI Pillar 2 Score (Data services)",
+                              "SPI.INDEX.PIL3"  = "SPI Pillar 3 Score (Data products)",
+                              "SPI.INDEX.PIL4"  = "SPI Pillar 4 Score (Data sources)",
+                              "SPI.INDEX.PIL5"  = "SPI Pillar 5 Score (Data infrastructure)",
+                              "log(NY.GDP.PCAP.KD)" = "Log GDP per capita (constant 2015 US$)",
+                              "NE.TRD.GNFS.ZS" = "Trade (% of GDP)",
+                              "NV.AGR.TOTL.ZS"= "Agriculture, forestry, fishing value added (% of GDP)",
+                              "NV.IND.MANF.ZS"  = "Manufacturing value added (% of GDP)",
+                              "SE.PRM.ENRR" = "School Enrollment, Primary (% gross)" ,
+                              "WGI.OVL" = "WGI Index",
+                              "factor(date)2017"="Year 2017",
+                              "factor(date)2018"="Year 2018",
+                              "factor(date)2019"="Year 2019",
+                              "factor(date)2020"="Year 2020",
+                              "factor(date)2021"="Year 2021",
+                              "factor(date)2022"="Year 2022",
+                              "(Intercept)" = "Constant",
+                              "CC.EST" = "WGI: Control of Corruption: Estimate",
+                              "GE.EST" = "WGI: Governance Effectiveness: Estimate",
+                              "PV.EST" = "WGI: Political Stability and Absence of Violence/Terrorism: Estimate",
+                              "RQ.EST" = "WGI: Regulatory Quality: Estimate",
+                              "RL.EST" = "WGI: Rule of Law: Estimate",
+                              "VA.EST" = "WGI: Voice and Accountability: Estimate"),
+              notes="Note: * p<0.10, ** p<0.05, *** p<0.01. Standard errors are clustered at the country level. Data are from the World Bank's World Development Indicators (WDI) and SPI. In cases where data are missing for a particular covariate, the data are imputed forward using the nearest available value.",
+              stars = c('*' = .1, '**' = .05, '***' = .01),
+              fmt = fmt_statistic("estimate" = 3, "std.error" = 2),
+              escape = FALSE
+              )
+```
+
+
+```{r}
+p <- plm::plm(hdi_value ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2))) 
+summary(p)
+
+p <- plm::plm(hdi_value~  SPI.INDEX + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(hdi_value ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5, index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 5: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(hdi_value ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5 + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=reg_df, model='random')
+print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+
+```
+
+## Table A.14.  Relationship between the SDG Index Overall Score from the 2023 Sustainable Development Report and SPI scores, 2016-2022
 
 ```{r}
 
@@ -3270,7 +3862,8 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 
 ```{r}
 p <- plm::plm(sdg_index_score ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
-print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2))) 
+summary(p)
 
 p <- plm::plm(sdg_index_score~  SPI.INDEX + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=reg_df, model='random') 
 print(paste0("Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
@@ -3284,7 +3877,161 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 
 ```
 
-## Table A.11. Relationship between Log GDP per capita and ODIN, Open Data Barometer, and Global Data Barometer scores, 2016-2022
+
+## Table A.15.  Relationship between the WB Human Capital Index and SPI scores, 2016-2022
+
+```{r}
+
+#create regression models
+ SDG_models <- list(
+
+ 'Model 1' = feols(HD.HCI.OVRL ~  SPI.INDEX , data=reg_df, se='cluster', cluster='country') ,
+
+
+ 'Model 2' = feols(HD.HCI.OVRL ~  SPI.INDEX  + factor(date) | country, data=reg_df, se='cluster', cluster='country') ,
+
+ 'Model 3' = feols(HD.HCI.OVRL ~  SPI.INDEX  + log(NY.GDP.PCAP.KD) + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR    + factor(date)| country , data=reg_df, se='cluster', cluster='country'),
+ 
+ 'Model 4' = feols(HD.HCI.OVRL ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5 , data=reg_df, se='cluster', cluster='country') ,
+
+
+ 'Model 5' = feols(HD.HCI.OVRL ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5    + factor(date) | country, data=reg_df, se='cluster', cluster='country') ,
+
+ 'Model 6' = feols(HD.HCI.OVRL ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5  +   log(NY.GDP.PCAP.KD) + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR    + factor(date)| country , data=reg_df, se='cluster', cluster='country')
+ 
+
+ )
+ modelsummary(SDG_models,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_map = c("SPI.INDEX"  = "Overall SPI Score",
+                              "SPI.INDEX.PIL1"  = "SPI Pillar 1 Score (Data use)",
+                              "SPI.INDEX.PIL2"  = "SPI Pillar 2 Score (Data services)",
+                              "SPI.INDEX.PIL3"  = "SPI Pillar 3 Score (Data products)",
+                              "SPI.INDEX.PIL4"  = "SPI Pillar 4 Score (Data sources)",
+                              "SPI.INDEX.PIL5"  = "SPI Pillar 5 Score (Data infrastructure)",
+                              "log(NY.GDP.PCAP.KD)" = "Log GDP per capita (constant 2015 US$)",
+                              "NE.TRD.GNFS.ZS" = "Trade (% of GDP)",
+                              "NV.AGR.TOTL.ZS"= "Agriculture, forestry, fishing value added (% of GDP)",
+                              "NV.IND.MANF.ZS"  = "Manufacturing value added (% of GDP)",
+                              "SE.PRM.ENRR" = "School Enrollment, Primary (% gross)" ,
+                              "WGI.OVL" = "WGI Index",
+                              "factor(date)2017"="Year 2017",
+                              "factor(date)2018"="Year 2018",
+                              "factor(date)2019"="Year 2019",
+                              "factor(date)2020"="Year 2020",
+                              "factor(date)2021"="Year 2021",
+                              "factor(date)2022"="Year 2022",
+                              "(Intercept)" = "Constant",
+                              "CC.EST" = "WGI: Control of Corruption: Estimate",
+                              "GE.EST" = "WGI: Governance Effectiveness: Estimate",
+                              "PV.EST" = "WGI: Political Stability and Absence of Violence/Terrorism: Estimate",
+                              "RQ.EST" = "WGI: Regulatory Quality: Estimate",
+                              "RL.EST" = "WGI: Rule of Law: Estimate",
+                              "VA.EST" = "WGI: Voice and Accountability: Estimate"),
+              notes="Note: * p<0.10, ** p<0.05, *** p<0.01. Standard errors are clustered at the country level. Data are from the World Bank's World Development Indicators (WDI) and SPI. In cases where data are missing for a particular covariate, the data are imputed forward using the nearest available value.",
+              stars = c('*' = .1, '**' = .05, '***' = .01),
+              fmt = fmt_statistic("estimate" = 3, "std.error" = 2),
+              escape = FALSE
+              )
+```
+
+
+```{r}
+p <- plm::plm(HD.HCI.OVRL ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+summary(p)
+
+p <- plm::plm(HD.HCI.OVRL~  SPI.INDEX + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(HD.HCI.OVRL ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5, index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 5: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(HD.HCI.OVRL ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5 + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=reg_df, model='random')
+print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+
+```
+
+
+## Table A.16.  Relationship between the World Press Freedom Index and SPI scores, 2016-2022
+
+```{r}
+
+#create regression models
+ SDG_models <- list(
+
+ 'Model 1' = feols(press_free_score ~  SPI.INDEX , data=reg_df, se='cluster', cluster='country') ,
+
+
+ 'Model 2' = feols(press_free_score ~  SPI.INDEX  + factor(date) | country, data=reg_df, se='cluster', cluster='country') ,
+
+ 'Model 3' = feols(press_free_score ~  SPI.INDEX  + log(NY.GDP.PCAP.KD) + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR    + factor(date)| country , data=reg_df, se='cluster', cluster='country'),
+ 
+ 'Model 4' = feols(press_free_score ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5 , data=reg_df, se='cluster', cluster='country') ,
+
+
+ 'Model 5' = feols(press_free_score ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5    + factor(date) | country, data=reg_df, se='cluster', cluster='country') ,
+
+ 'Model 6' = feols(press_free_score ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5  +   log(NY.GDP.PCAP.KD) + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR    + factor(date)| country , data=reg_df, se='cluster', cluster='country')
+ 
+
+ )
+ modelsummary(SDG_models,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_map = c("SPI.INDEX"  = "Overall SPI Score",
+                              "SPI.INDEX.PIL1"  = "SPI Pillar 1 Score (Data use)",
+                              "SPI.INDEX.PIL2"  = "SPI Pillar 2 Score (Data services)",
+                              "SPI.INDEX.PIL3"  = "SPI Pillar 3 Score (Data products)",
+                              "SPI.INDEX.PIL4"  = "SPI Pillar 4 Score (Data sources)",
+                              "SPI.INDEX.PIL5"  = "SPI Pillar 5 Score (Data infrastructure)",
+                              "log(NY.GDP.PCAP.KD)" = "Log GDP per capita (constant 2015 US$)",
+                              "NE.TRD.GNFS.ZS" = "Trade (% of GDP)",
+                              "NV.AGR.TOTL.ZS"= "Agriculture, forestry, fishing value added (% of GDP)",
+                              "NV.IND.MANF.ZS"  = "Manufacturing value added (% of GDP)",
+                              "SE.PRM.ENRR" = "School Enrollment, Primary (% gross)" ,
+                              "WGI.OVL" = "WGI Index",
+                              "factor(date)2017"="Year 2017",
+                              "factor(date)2018"="Year 2018",
+                              "factor(date)2019"="Year 2019",
+                              "factor(date)2020"="Year 2020",
+                              "factor(date)2021"="Year 2021",
+                              "factor(date)2022"="Year 2022",
+                              "(Intercept)" = "Constant",
+                              "CC.EST" = "WGI: Control of Corruption: Estimate",
+                              "GE.EST" = "WGI: Governance Effectiveness: Estimate",
+                              "PV.EST" = "WGI: Political Stability and Absence of Violence/Terrorism: Estimate",
+                              "RQ.EST" = "WGI: Regulatory Quality: Estimate",
+                              "RL.EST" = "WGI: Rule of Law: Estimate",
+                              "VA.EST" = "WGI: Voice and Accountability: Estimate"),
+              notes="Note: * p<0.10, ** p<0.05, *** p<0.01. Standard errors are clustered at the country level. Data are from the World Bank's World Development Indicators (WDI) and SPI. In cases where data are missing for a particular covariate, the data are imputed forward using the nearest available value.",
+              stars = c('*' = .1, '**' = .05, '***' = .01),
+              fmt = fmt_statistic("estimate" = 3, "std.error" = 2),
+              escape = FALSE
+              )
+```
+
+
+```{r}
+p <- plm::plm(press_free_score ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2))) 
+summary(p)
+
+p <- plm::plm(press_free_score~  SPI.INDEX + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(press_free_score ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5, index=c('country', 'date'), data=reg_df, model='random') 
+print(paste0("Model 5: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(press_free_score ~  SPI.INDEX.PIL1 + SPI.INDEX.PIL2 + SPI.INDEX.PIL3 + SPI.INDEX.PIL4 + SPI.INDEX.PIL5 + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=reg_df, model='random')
+print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+
+```
+
+## Table A.17. Relationship between Log GDP per capita and ODIN, Open Data Barometer, and Global Data Barometer scores, 2016-2022
 
 ```{r}
 #create regression models
@@ -3351,18 +4098,19 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 ```{r}
 p <- plm::plm(log(NY.GDP.PCAP.KD) ~  ODIN_score, index=c('country', 'date'), data=odin_reg_df, model='random') 
 print(paste0("ODIN Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+summary(p)
 
 p <- plm::plm(log(NY.GDP.PCAP.KD) ~  ODIN_score + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + WGI.OVL, index=c('country', 'date'), data=odin_reg_df, model='random') 
 print(paste0("ODIN Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
 
 p <- plm::plm(log(NY.GDP.PCAP.KD) ~  odb, index=c('country', 'date'), data=odb_reg_df, model='random') 
 print(paste0("ODB Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
-
+summary(p)
 p <- plm::plm(log(NY.GDP.PCAP.KD) ~  odb + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + WGI.OVL, index=c('country', 'date'), data=odb_reg_df, model='random') 
 print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
 ```
 
-## Table A.12. Relationship between Government Effectiveness from Worldwide Governance Indicators and ODIN, Open Data Barometer, and Global Data Barometer scores, 2013-2022
+## Table A.18. Relationship between Government Effectiveness from Worldwide Governance Indicators and ODIN, Open Data Barometer, and Global Data Barometer scores, 2013-2022
 
 ```{r}
 
@@ -3431,17 +4179,253 @@ print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma
 ```{r}
 p <- plm::plm(WGI.OVL ~  ODIN_score, index=c('country', 'date'), data=odin_reg_df, model='random') 
 print(paste0("ODIN Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
-
+summary(p)
 p <- plm::plm(WGI.OVL ~  ODIN_score + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odin_reg_df, model='random') 
 print(paste0("ODIN Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
 
 p <- plm::plm(WGI.OVL ~  odb, index=c('country', 'date'), data=odb_reg_df, model='random') 
 print(paste0("ODB Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
-
+summary(p)
 p <- plm::plm(WGI.OVL ~  odb + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odb_reg_df, model='random') 
 print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
 ```
-## Table A.13. Relationship between the SDG Index Overall Score from the 2023 Sustainable Development Report and ODIN, Open Data Barometer, and Global Data Barometer scores, 2013-2022
+
+## Table A.19. Relationship between the Economic Complexity Index and ODIN, Open Data Barometer, and Global Data Barometer scores, 2013-2022
+
+```{r}
+#create regression models
+ models <- list(
+
+ 'ODIN - Model 1' = feols(eci_value ~  ODIN_score , data=odin_reg_df, se='cluster', cluster='country') ,
+
+
+ 'ODIN - Model 2' = feols(eci_value ~  ODIN_score  + factor(date) | country, data=odin_reg_df, se='cluster', cluster='country') ,
+
+ 'ODIN - Model 3' = feols(eci_value ~  ODIN_score  + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD) + factor(date)| country , data=odin_reg_df, se='cluster', cluster='country'),
+
+  'ODB - Model 1' = feols(eci_value ~  odb , data=odb_reg_df, se='cluster', cluster='country') ,
+
+
+ 'ODB - Model 2' = feols(eci_value ~  odb  + factor(date) | country, data=odb_reg_df, se='cluster', cluster='country') ,
+
+ 'ODB - Model 3' = feols(eci_value ~  odb  + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD) + factor(date)| country , data=odb_reg_df, se='cluster', cluster='country'),
+ 
+  'GDB - Model 1' = feols(eci_value ~  gdb , data=gdb_reg_df, se='cluster', cluster='country') 
+)
+
+ modelsummary(models,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_map = c("SPI.INDEX"  = "Overall SPI Score",
+                              "SPI.INDEX.PIL1"  = "SPI Pillar 1 Score (Data use)",
+                              "SPI.INDEX.PIL2"  = "SPI Pillar 2 Score (Data services)",
+                              "SPI.INDEX.PIL3"  = "SPI Pillar 3 Score (Data products)",
+                              "SPI.INDEX.PIL4"  = "SPI Pillar 4 Score (Data sources)",
+                              "SPI.INDEX.PIL5"  = "SPI Pillar 5 Score (Data infrastructure)",
+                           "ODIN_score" = "ODIN Score",
+                           "odb" = "Open Data Barometer Score",
+                           "gdb" = "Global Data Barometer Score",
+                              "NE.TRD.GNFS.ZS" = "Trade (% of GDP)",
+                              "NV.AGR.TOTL.ZS"= "Agriculture, forestry, fishing value added (% of GDP)",
+                              "NV.IND.MANF.ZS"  = "Manufacturing value added (% of GDP)",
+                              "SE.PRM.ENRR" = "School Enrollment, Primary (% gross)" ,
+                              "WGI.OVL" = "WGI Index",
+                              "factor(date)2013"="Year 2013",
+                              "factor(date)2014"="Year 2014",
+                              "factor(date)2015"="Year 2015",
+                              "factor(date)2016"="Year 2016",
+                              "factor(date)2017"="Year 2017",
+                              "factor(date)2018"="Year 2018",
+                              "factor(date)2019"="Year 2019",
+                              "factor(date)2020"="Year 2020",
+                              "factor(date)2021"="Year 2021",
+                              "factor(date)2022"="Year 2022",
+                              "(Intercept)" = "Constant",
+                              "CC.EST" = "WGI: Control of Corruption: Estimate",
+                              "GE.EST" = "WGI: Governance Effectiveness: Estimate",
+                              "PV.EST" = "WGI: Political Stability and Absence of Violence/Terrorism: Estimate",
+                              "RQ.EST" = "WGI: Regulatory Quality: Estimate",
+                              "RL.EST" = "WGI: Rule of Law: Estimate",
+                              "VA.EST" = "WGI: Voice and Accountability: Estimate"),
+              notes=" Note: * p<0.10, ** p<0.05, *** p<0.01. Standard errors are clustered at the country level. Data from the World Bank's World Development Indicators (WDI), Open Data Watch (ODIN), Global Data Barometer (GDB), and Open Data Barometer (ODB). In cases where data are missing for a particular covariate, the data are imputed forward using the nearest available value. Estimates with country fixed effects not available for the Global Data Barometer, because the indicator contains on ly one time period.",
+              stars = c('*' = .1, '**' = .05, '***' = .01),
+              fmt = fmt_statistic("estimate" = 3, "std.error" = 2),
+              escape = FALSE
+              )
+```
+
+```{r}
+p <- plm::plm(eci_value ~  ODIN_score, index=c('country', 'date'), data=odin_reg_df, model='random') 
+print(paste0("ODIN Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+summary(p)
+p <- plm::plm(eci_value ~  ODIN_score + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odin_reg_df, model='random') 
+print(paste0("ODIN Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(eci_value ~  odb, index=c('country', 'date'), data=odb_reg_df, model='random') 
+print(paste0("ODB Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+summary(p)
+p <- plm::plm(eci_value ~  odb + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odb_reg_df, model='random') 
+print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+```
+
+## Table A.20. Relationship between the Environmental Performance Index and ODIN, Open Data Barometer, and Global Data Barometer scores, 2013-2022
+
+```{r}
+#create regression models
+ models <- list(
+
+ 'ODIN - Model 1' = feols(env_perform_index ~  ODIN_score , data=odin_reg_df, se='cluster', cluster='country') ,
+
+
+ 'ODIN - Model 2' = feols(env_perform_index ~  ODIN_score  + factor(date) | country, data=odin_reg_df, se='cluster', cluster='country') ,
+
+ 'ODIN - Model 3' = feols(env_perform_index ~  ODIN_score  + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD) + factor(date)| country , data=odin_reg_df, se='cluster', cluster='country'),
+
+  'ODB - Model 1' = feols(env_perform_index ~  odb , data=odb_reg_df, se='cluster', cluster='country') ,
+
+
+ 'ODB - Model 2' = feols(env_perform_index ~  odb  + factor(date) | country, data=odb_reg_df, se='cluster', cluster='country') ,
+
+ 'ODB - Model 3' = feols(env_perform_index ~  odb  + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD) + factor(date)| country , data=odb_reg_df, se='cluster', cluster='country'),
+ 
+  'GDB - Model 1' = feols(env_perform_index ~  gdb , data=gdb_reg_df, se='cluster', cluster='country') 
+)
+
+ modelsummary(models,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_map = c("SPI.INDEX"  = "Overall SPI Score",
+                              "SPI.INDEX.PIL1"  = "SPI Pillar 1 Score (Data use)",
+                              "SPI.INDEX.PIL2"  = "SPI Pillar 2 Score (Data services)",
+                              "SPI.INDEX.PIL3"  = "SPI Pillar 3 Score (Data products)",
+                              "SPI.INDEX.PIL4"  = "SPI Pillar 4 Score (Data sources)",
+                              "SPI.INDEX.PIL5"  = "SPI Pillar 5 Score (Data infrastructure)",
+                           "ODIN_score" = "ODIN Score",
+                           "odb" = "Open Data Barometer Score",
+                           "gdb" = "Global Data Barometer Score",
+                              "NE.TRD.GNFS.ZS" = "Trade (% of GDP)",
+                              "NV.AGR.TOTL.ZS"= "Agriculture, forestry, fishing value added (% of GDP)",
+                              "NV.IND.MANF.ZS"  = "Manufacturing value added (% of GDP)",
+                              "SE.PRM.ENRR" = "School Enrollment, Primary (% gross)" ,
+                              "WGI.OVL" = "WGI Index",
+                              "factor(date)2013"="Year 2013",
+                              "factor(date)2014"="Year 2014",
+                              "factor(date)2015"="Year 2015",
+                              "factor(date)2016"="Year 2016",
+                              "factor(date)2017"="Year 2017",
+                              "factor(date)2018"="Year 2018",
+                              "factor(date)2019"="Year 2019",
+                              "factor(date)2020"="Year 2020",
+                              "factor(date)2021"="Year 2021",
+                              "factor(date)2022"="Year 2022",
+                              "(Intercept)" = "Constant",
+                              "CC.EST" = "WGI: Control of Corruption: Estimate",
+                              "GE.EST" = "WGI: Governance Effectiveness: Estimate",
+                              "PV.EST" = "WGI: Political Stability and Absence of Violence/Terrorism: Estimate",
+                              "RQ.EST" = "WGI: Regulatory Quality: Estimate",
+                              "RL.EST" = "WGI: Rule of Law: Estimate",
+                              "VA.EST" = "WGI: Voice and Accountability: Estimate"),
+              notes=" Note: * p<0.10, ** p<0.05, *** p<0.01. Standard errors are clustered at the country level. Data from the World Bank's World Development Indicators (WDI), Open Data Watch (ODIN), Global Data Barometer (GDB), and Open Data Barometer (ODB). In cases where data are missing for a particular covariate, the data are imputed forward using the nearest available value. Estimates with country fixed effects not available for the Global Data Barometer, because the indicator contains on ly one time period.",
+              stars = c('*' = .1, '**' = .05, '***' = .01),
+              fmt = fmt_statistic("estimate" = 3, "std.error" = 2),
+              escape = FALSE
+              )
+```
+
+```{r}
+p <- plm::plm(env_perform_index ~  ODIN_score, index=c('country', 'date'), data=odin_reg_df, model='random') 
+print(paste0("ODIN Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+summary(p)
+p <- plm::plm(env_perform_index ~  ODIN_score + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odin_reg_df, model='random') 
+print(paste0("ODIN Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(env_perform_index ~  odb, index=c('country', 'date'), data=odb_reg_df, model='random') 
+print(paste0("ODB Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(env_perform_index ~  odb + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odb_reg_df, model='random') 
+print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+```
+
+## Table A.21. Relationship between the OECD Better Life Index and ODIN, Open Data Barometer, and Global Data Barometer scores, 2013-2022
+
+```{r}
+#create regression models
+ models <- list(
+
+ 'ODIN - Model 1' = feols(better_life_index ~  ODIN_score , data=odin_reg_df, se='cluster', cluster='country') ,
+
+
+ 'ODIN - Model 2' = feols(better_life_index ~  ODIN_score  + factor(date) | country, data=odin_reg_df, se='cluster', cluster='country') ,
+
+ 'ODIN - Model 3' = feols(better_life_index ~  ODIN_score  + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD) + factor(date)| country , data=odin_reg_df, se='cluster', cluster='country'),
+
+  'ODB - Model 1' = feols(better_life_index ~  odb , data=odb_reg_df, se='cluster', cluster='country') ,
+
+
+ 'ODB - Model 2' = feols(better_life_index ~  odb  + factor(date) | country, data=odb_reg_df, se='cluster', cluster='country') ,
+
+ 'ODB - Model 3' = feols(better_life_index ~  odb  + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD) + factor(date)| country , data=odb_reg_df, se='cluster', cluster='country'),
+ 
+  'GDB - Model 1' = feols(better_life_index ~  gdb , data=gdb_reg_df, se='cluster', cluster='country') 
+)
+
+ modelsummary(models,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_map = c("SPI.INDEX"  = "Overall SPI Score",
+                              "SPI.INDEX.PIL1"  = "SPI Pillar 1 Score (Data use)",
+                              "SPI.INDEX.PIL2"  = "SPI Pillar 2 Score (Data services)",
+                              "SPI.INDEX.PIL3"  = "SPI Pillar 3 Score (Data products)",
+                              "SPI.INDEX.PIL4"  = "SPI Pillar 4 Score (Data sources)",
+                              "SPI.INDEX.PIL5"  = "SPI Pillar 5 Score (Data infrastructure)",
+                           "ODIN_score" = "ODIN Score",
+                           "odb" = "Open Data Barometer Score",
+                           "gdb" = "Global Data Barometer Score",
+                              "NE.TRD.GNFS.ZS" = "Trade (% of GDP)",
+                              "NV.AGR.TOTL.ZS"= "Agriculture, forestry, fishing value added (% of GDP)",
+                              "NV.IND.MANF.ZS"  = "Manufacturing value added (% of GDP)",
+                              "SE.PRM.ENRR" = "School Enrollment, Primary (% gross)" ,
+                              "WGI.OVL" = "WGI Index",
+                              "factor(date)2013"="Year 2013",
+                              "factor(date)2014"="Year 2014",
+                              "factor(date)2015"="Year 2015",
+                              "factor(date)2016"="Year 2016",
+                              "factor(date)2017"="Year 2017",
+                              "factor(date)2018"="Year 2018",
+                              "factor(date)2019"="Year 2019",
+                              "factor(date)2020"="Year 2020",
+                              "factor(date)2021"="Year 2021",
+                              "factor(date)2022"="Year 2022",
+                              "(Intercept)" = "Constant",
+                              "CC.EST" = "WGI: Control of Corruption: Estimate",
+                              "GE.EST" = "WGI: Governance Effectiveness: Estimate",
+                              "PV.EST" = "WGI: Political Stability and Absence of Violence/Terrorism: Estimate",
+                              "RQ.EST" = "WGI: Regulatory Quality: Estimate",
+                              "RL.EST" = "WGI: Rule of Law: Estimate",
+                              "VA.EST" = "WGI: Voice and Accountability: Estimate"),
+              notes=" Note: * p<0.10, ** p<0.05, *** p<0.01. Standard errors are clustered at the country level. Data from the World Bank's World Development Indicators (WDI), Open Data Watch (ODIN), Global Data Barometer (GDB), and Open Data Barometer (ODB). In cases where data are missing for a particular covariate, the data are imputed forward using the nearest available value. Estimates with country fixed effects not available for the Global Data Barometer, because the indicator contains on ly one time period.",
+              stars = c('*' = .1, '**' = .05, '***' = .01),
+              fmt = fmt_statistic("estimate" = 3, "std.error" = 2),
+              escape = FALSE
+              )
+```
+
+```{r}
+p <- plm::plm(better_life_index ~  ODIN_score, index=c('country', 'date'), data=odin_reg_df, model='random') 
+print(paste0("ODIN Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+summary(p)
+p <- plm::plm(better_life_index ~  ODIN_score + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odin_reg_df, model='random') 
+print(paste0("ODIN Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(better_life_index ~  odb, index=c('country', 'date'), data=odb_reg_df, model='random') 
+print(paste0("ODB Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+summary(p)
+p <- plm::plm(better_life_index ~  odb + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odb_reg_df, model='random') 
+print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+```
+
+## Table A.22. Relationship between the SDG Index Overall Score from the 2023 Sustainable Development Report and ODIN, Open Data Barometer, and Global Data Barometer scores, 2013-2022
 
 ```{r}
 #create regression models
@@ -3508,14 +4492,247 @@ print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma
 ```{r}
 p <- plm::plm(sdg_index_score ~  ODIN_score, index=c('country', 'date'), data=odin_reg_df, model='random') 
 print(paste0("ODIN Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
-
+summary(p)
 p <- plm::plm(sdg_index_score ~  ODIN_score + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odin_reg_df, model='random') 
 print(paste0("ODIN Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
 
 p <- plm::plm(sdg_index_score ~  odb, index=c('country', 'date'), data=odb_reg_df, model='random') 
 print(paste0("ODB Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
-
+summary(p)
 p <- plm::plm(sdg_index_score ~  odb + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odb_reg_df, model='random') 
+print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+```
+
+## Table A.23. Relationship between the UN Human Development Index and ODIN, Open Data Barometer, and Global Data Barometer scores, 2013-2022
+
+```{r}
+#create regression models
+ models <- list(
+
+ 'ODIN - Model 1' = feols(hdi_value ~  ODIN_score , data=odin_reg_df, se='cluster', cluster='country') ,
+
+
+ 'ODIN - Model 2' = feols(hdi_value ~  ODIN_score  + factor(date) | country, data=odin_reg_df, se='cluster', cluster='country') ,
+
+ 'ODIN - Model 3' = feols(hdi_value ~  ODIN_score  + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD) + factor(date)| country , data=odin_reg_df, se='cluster', cluster='country'),
+
+  'ODB - Model 1' = feols(hdi_value ~  odb , data=odb_reg_df, se='cluster', cluster='country') ,
+
+
+ 'ODB - Model 2' = feols(hdi_value ~  odb  + factor(date) | country, data=odb_reg_df, se='cluster', cluster='country') ,
+
+ 'ODB - Model 3' = feols(hdi_value ~  odb  + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD) + factor(date)| country , data=odb_reg_df, se='cluster', cluster='country'),
+ 
+  'GDB - Model 1' = feols(hdi_value ~  gdb , data=gdb_reg_df, se='cluster', cluster='country') 
+)
+
+ modelsummary(models,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_map = c("SPI.INDEX"  = "Overall SPI Score",
+                              "SPI.INDEX.PIL1"  = "SPI Pillar 1 Score (Data use)",
+                              "SPI.INDEX.PIL2"  = "SPI Pillar 2 Score (Data services)",
+                              "SPI.INDEX.PIL3"  = "SPI Pillar 3 Score (Data products)",
+                              "SPI.INDEX.PIL4"  = "SPI Pillar 4 Score (Data sources)",
+                              "SPI.INDEX.PIL5"  = "SPI Pillar 5 Score (Data infrastructure)",
+                           "ODIN_score" = "ODIN Score",
+                           "odb" = "Open Data Barometer Score",
+                           "gdb" = "Global Data Barometer Score",
+                              "NE.TRD.GNFS.ZS" = "Trade (% of GDP)",
+                              "NV.AGR.TOTL.ZS"= "Agriculture, forestry, fishing value added (% of GDP)",
+                              "NV.IND.MANF.ZS"  = "Manufacturing value added (% of GDP)",
+                              "SE.PRM.ENRR" = "School Enrollment, Primary (% gross)" ,
+                              "WGI.OVL" = "WGI Index",
+                              "factor(date)2013"="Year 2013",
+                              "factor(date)2014"="Year 2014",
+                              "factor(date)2015"="Year 2015",
+                              "factor(date)2016"="Year 2016",
+                              "factor(date)2017"="Year 2017",
+                              "factor(date)2018"="Year 2018",
+                              "factor(date)2019"="Year 2019",
+                              "factor(date)2020"="Year 2020",
+                              "factor(date)2021"="Year 2021",
+                              "factor(date)2022"="Year 2022",
+                              "(Intercept)" = "Constant",
+                              "CC.EST" = "WGI: Control of Corruption: Estimate",
+                              "GE.EST" = "WGI: Governance Effectiveness: Estimate",
+                              "PV.EST" = "WGI: Political Stability and Absence of Violence/Terrorism: Estimate",
+                              "RQ.EST" = "WGI: Regulatory Quality: Estimate",
+                              "RL.EST" = "WGI: Rule of Law: Estimate",
+                              "VA.EST" = "WGI: Voice and Accountability: Estimate"),
+              notes=" Note: * p<0.10, ** p<0.05, *** p<0.01. Standard errors are clustered at the country level. Data from the World Bank's World Development Indicators (WDI), Open Data Watch (ODIN), Global Data Barometer (GDB), and Open Data Barometer (ODB). In cases where data are missing for a particular covariate, the data are imputed forward using the nearest available value. Estimates with country fixed effects not available for the Global Data Barometer, because the indicator contains on ly one time period.",
+              stars = c('*' = .1, '**' = .05, '***' = .01),
+              fmt = fmt_statistic("estimate" = 3, "std.error" = 2),
+              escape = FALSE
+              )
+```
+
+```{r}
+p <- plm::plm(hdi_value ~  ODIN_score, index=c('country', 'date'), data=odin_reg_df, model='random') 
+print(paste0("ODIN Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+summary(p)
+p <- plm::plm(hdi_value ~  ODIN_score + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odin_reg_df, model='random') 
+print(paste0("ODIN Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(hdi_value ~  odb, index=c('country', 'date'), data=odb_reg_df, model='random') 
+print(paste0("ODB Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+summary(p)
+p <- plm::plm(hdi_value ~  odb + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odb_reg_df, model='random') 
+print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+```
+
+## Table A.24. Relationship between the WB Human Capital Index and ODIN, Open Data Barometer, and Global Data Barometer scores, 2013-2022
+
+```{r}
+#create regression models
+ models <- list(
+
+ 'ODIN - Model 1' = feols(HD.HCI.OVRL ~  ODIN_score , data=odin_reg_df, se='cluster', cluster='country') ,
+
+
+ 'ODIN - Model 2' = feols(HD.HCI.OVRL ~  ODIN_score  + factor(date) | country, data=odin_reg_df, se='cluster', cluster='country') ,
+
+ 'ODIN - Model 3' = feols(HD.HCI.OVRL ~  ODIN_score  + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD) + factor(date)| country , data=odin_reg_df, se='cluster', cluster='country'),
+
+  'ODB - Model 1' = feols(HD.HCI.OVRL ~  odb , data=odb_reg_df, se='cluster', cluster='country') ,
+
+
+ 'ODB - Model 2' = feols(HD.HCI.OVRL ~  odb  + factor(date) | country, data=odb_reg_df, se='cluster', cluster='country') ,
+
+ 'ODB - Model 3' = feols(HD.HCI.OVRL ~  odb  + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD) + factor(date)| country , data=odb_reg_df, se='cluster', cluster='country'),
+ 
+  'GDB - Model 1' = feols(HD.HCI.OVRL ~  gdb , data=gdb_reg_df, se='cluster', cluster='country') 
+)
+
+ modelsummary(models,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_map = c("SPI.INDEX"  = "Overall SPI Score",
+                              "SPI.INDEX.PIL1"  = "SPI Pillar 1 Score (Data use)",
+                              "SPI.INDEX.PIL2"  = "SPI Pillar 2 Score (Data services)",
+                              "SPI.INDEX.PIL3"  = "SPI Pillar 3 Score (Data products)",
+                              "SPI.INDEX.PIL4"  = "SPI Pillar 4 Score (Data sources)",
+                              "SPI.INDEX.PIL5"  = "SPI Pillar 5 Score (Data infrastructure)",
+                           "ODIN_score" = "ODIN Score",
+                           "odb" = "Open Data Barometer Score",
+                           "gdb" = "Global Data Barometer Score",
+                              "NE.TRD.GNFS.ZS" = "Trade (% of GDP)",
+                              "NV.AGR.TOTL.ZS"= "Agriculture, forestry, fishing value added (% of GDP)",
+                              "NV.IND.MANF.ZS"  = "Manufacturing value added (% of GDP)",
+                              "SE.PRM.ENRR" = "School Enrollment, Primary (% gross)" ,
+                              "WGI.OVL" = "WGI Index",
+                              "factor(date)2013"="Year 2013",
+                              "factor(date)2014"="Year 2014",
+                              "factor(date)2015"="Year 2015",
+                              "factor(date)2016"="Year 2016",
+                              "factor(date)2017"="Year 2017",
+                              "factor(date)2018"="Year 2018",
+                              "factor(date)2019"="Year 2019",
+                              "factor(date)2020"="Year 2020",
+                              "factor(date)2021"="Year 2021",
+                              "factor(date)2022"="Year 2022",
+                              "(Intercept)" = "Constant",
+                              "CC.EST" = "WGI: Control of Corruption: Estimate",
+                              "GE.EST" = "WGI: Governance Effectiveness: Estimate",
+                              "PV.EST" = "WGI: Political Stability and Absence of Violence/Terrorism: Estimate",
+                              "RQ.EST" = "WGI: Regulatory Quality: Estimate",
+                              "RL.EST" = "WGI: Rule of Law: Estimate",
+                              "VA.EST" = "WGI: Voice and Accountability: Estimate"),
+              notes=" Note: * p<0.10, ** p<0.05, *** p<0.01. Standard errors are clustered at the country level. Data from the World Bank's World Development Indicators (WDI), Open Data Watch (ODIN), Global Data Barometer (GDB), and Open Data Barometer (ODB). In cases where data are missing for a particular covariate, the data are imputed forward using the nearest available value. Estimates with country fixed effects not available for the Global Data Barometer, because the indicator contains on ly one time period.",
+              stars = c('*' = .1, '**' = .05, '***' = .01),
+              fmt = fmt_statistic("estimate" = 3, "std.error" = 2),
+              escape = FALSE
+              )
+```
+
+```{r}
+p <- plm::plm(HD.HCI.OVRL ~  ODIN_score, index=c('country', 'date'), data=odin_reg_df, model='random') 
+print(paste0("ODIN Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+summary(p)
+p <- plm::plm(HD.HCI.OVRL ~  ODIN_score + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odin_reg_df, model='random') 
+print(paste0("ODIN Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(HD.HCI.OVRL ~  odb, index=c('country', 'date'), data=odb_reg_df, model='random') 
+print(paste0("ODB Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+summary(p)
+p <- plm::plm(HD.HCI.OVRL ~  odb + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odb_reg_df, model='random') 
+print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+```
+
+## Table A.25. Relationship between the World Press Freedom Index and ODIN, Open Data Barometer, and Global Data Barometer scores, 2013-2022
+
+```{r}
+#create regression models
+ models <- list(
+
+ 'ODIN - Model 1' = feols(press_free_score ~  ODIN_score , data=odin_reg_df, se='cluster', cluster='country') ,
+
+
+ 'ODIN - Model 2' = feols(press_free_score ~  ODIN_score  + factor(date) | country, data=odin_reg_df, se='cluster', cluster='country') ,
+
+ 'ODIN - Model 3' = feols(press_free_score ~  ODIN_score  + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD) + factor(date)| country , data=odin_reg_df, se='cluster', cluster='country'),
+
+  'ODB - Model 1' = feols(press_free_score ~  odb , data=odb_reg_df, se='cluster', cluster='country') ,
+
+
+ 'ODB - Model 2' = feols(press_free_score ~  odb  + factor(date) | country, data=odb_reg_df, se='cluster', cluster='country') ,
+
+ 'ODB - Model 3' = feols(press_free_score ~  odb  + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD) + factor(date)| country , data=odb_reg_df, se='cluster', cluster='country'),
+ 
+  'GDB - Model 1' = feols(press_free_score ~  gdb , data=gdb_reg_df, se='cluster', cluster='country') 
+)
+
+ modelsummary(models,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_map = c("SPI.INDEX"  = "Overall SPI Score",
+                              "SPI.INDEX.PIL1"  = "SPI Pillar 1 Score (Data use)",
+                              "SPI.INDEX.PIL2"  = "SPI Pillar 2 Score (Data services)",
+                              "SPI.INDEX.PIL3"  = "SPI Pillar 3 Score (Data products)",
+                              "SPI.INDEX.PIL4"  = "SPI Pillar 4 Score (Data sources)",
+                              "SPI.INDEX.PIL5"  = "SPI Pillar 5 Score (Data infrastructure)",
+                           "ODIN_score" = "ODIN Score",
+                           "odb" = "Open Data Barometer Score",
+                           "gdb" = "Global Data Barometer Score",
+                              "NE.TRD.GNFS.ZS" = "Trade (% of GDP)",
+                              "NV.AGR.TOTL.ZS"= "Agriculture, forestry, fishing value added (% of GDP)",
+                              "NV.IND.MANF.ZS"  = "Manufacturing value added (% of GDP)",
+                              "SE.PRM.ENRR" = "School Enrollment, Primary (% gross)" ,
+                              "WGI.OVL" = "WGI Index",
+                              "factor(date)2013"="Year 2013",
+                              "factor(date)2014"="Year 2014",
+                              "factor(date)2015"="Year 2015",
+                              "factor(date)2016"="Year 2016",
+                              "factor(date)2017"="Year 2017",
+                              "factor(date)2018"="Year 2018",
+                              "factor(date)2019"="Year 2019",
+                              "factor(date)2020"="Year 2020",
+                              "factor(date)2021"="Year 2021",
+                              "factor(date)2022"="Year 2022",
+                              "(Intercept)" = "Constant",
+                              "CC.EST" = "WGI: Control of Corruption: Estimate",
+                              "GE.EST" = "WGI: Governance Effectiveness: Estimate",
+                              "PV.EST" = "WGI: Political Stability and Absence of Violence/Terrorism: Estimate",
+                              "RQ.EST" = "WGI: Regulatory Quality: Estimate",
+                              "RL.EST" = "WGI: Rule of Law: Estimate",
+                              "VA.EST" = "WGI: Voice and Accountability: Estimate"),
+              notes=" Note: * p<0.10, ** p<0.05, *** p<0.01. Standard errors are clustered at the country level. Data from the World Bank's World Development Indicators (WDI), Open Data Watch (ODIN), Global Data Barometer (GDB), and Open Data Barometer (ODB). In cases where data are missing for a particular covariate, the data are imputed forward using the nearest available value. Estimates with country fixed effects not available for the Global Data Barometer, because the indicator contains on ly one time period.",
+              stars = c('*' = .1, '**' = .05, '***' = .01),
+              fmt = fmt_statistic("estimate" = 3, "std.error" = 2),
+              escape = FALSE
+              )
+```
+
+```{r}
+p <- plm::plm(press_free_score ~  ODIN_score, index=c('country', 'date'), data=odin_reg_df, model='random') 
+print(paste0("ODIN Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+summary(p)
+p <- plm::plm(press_free_score ~  ODIN_score + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odin_reg_df, model='random') 
+print(paste0("ODIN Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+
+p <- plm::plm(press_free_score ~  odb, index=c('country', 'date'), data=odb_reg_df, model='random') 
+print(paste0("ODB Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
+p <- plm::plm(press_free_score ~  odb + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odb_reg_df, model='random') 
 print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
 ```
 
