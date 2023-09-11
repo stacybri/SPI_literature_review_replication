@@ -1,3 +1,5 @@
+library(cocor)
+
 #get correlations with pvalues
 index_cor_full <- comparison_df %>%
   select(c('gdb','odb','ODIN_score', 'SCI', 'SPI.INDEX' ),devindex) %>%
@@ -55,6 +57,8 @@ p_value_from_z <- function(z) {
 n <- nrow(cor_matrix)
 c <- ncol(cor_matrix)
 p_values <- matrix(NA, n, c*c)  # Store p-values for each pairwise comparison
+p_values_pearson <- matrix(NA, n, c*c)  # Store p-values for each pairwise comparison
+p_values_steiger <- matrix(NA, n, c*c)  # Store p-values for each pairwise comparison
 
 for (i in 1:n) {
   for (j in 1:c) {
@@ -82,6 +86,7 @@ for (i in 1:n) {
       kfactor = correlation_between*(1-correlation_1^2-correlation_2^2)-0.5*(correlation_1*correlation_2)*(1-correlation_1^2-correlation_2^2-correlation_between^2)
       z_diff <- sqrt(n_min)*(correlation_1-correlation_2)/sqrt((1-correlation_1^2)^2+(1-correlation_2^2)^2-2*kfactor)
       
+      
       if (is.na(z_diff)) {
         z_diff=0
       }
@@ -102,7 +107,13 @@ for (i in 1:n) {
       } else {
         txt <- ""
       }
-      p_values[i, pos] <- txt
+      p_values[i, pos] <- pval
+      
+      #compare to cocor
+      cocor_results <- cocor::cocor.dep.groups.overlap(r.jk=correlation_1, r.jh=correlation_2, r.kh=correlation_between, n=n_min)
+      p_values_pearson[i, pos] <- cocor_results@pearson1898$p.value
+      p_values_steiger[i, pos] <- cocor_results@steiger1980$p.value
+      
     }
   }
 }
@@ -112,3 +123,19 @@ pval_df <- as.data.frame(p_values) %>%
   cbind(`Dev Index`=devindex_names) %>%
   select(-V1, -V7, -V13, -V19, -V25) %>%
   select(`Dev Index`, everything()) 
+
+#format as table
+pval_pearson_df <- as.data.frame(p_values_pearson) %>%
+  cbind(`Dev Index`=devindex_names) %>%
+  select(-V1, -V7, -V13, -V19, -V25) %>%
+  select(`Dev Index`, everything()) 
+
+pval_steiger_df <- as.data.frame(p_values_steiger) %>%
+  cbind(`Dev Index`=devindex_names) %>%
+  select(-V1, -V7, -V13, -V19, -V25) %>%
+  select(`Dev Index`, everything()) 
+
+#results are identical for pearson and nearly identical for steiger
+dataCompareR::rCompare(pval_df, pval_pearson_df) %>% summary()
+dataCompareR::rCompare(pval_df, pval_steiger_df) %>% summary()
+
