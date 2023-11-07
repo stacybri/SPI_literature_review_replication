@@ -49,8 +49,6 @@ specification <- "2yr"
 
 ```
 
-
-
 ```{r}
 #| label: fun
 
@@ -900,9 +898,9 @@ predictors_df <- read_csv(paste0(output_dir, "/SPI_regression_predictors.csv"))
 
 ```
 
-## Figure M.1. The Pillars and Dimensions that Construct the New SPI 
+## Figure M.1. The Pillars and Dimensions that Construct the New SPI
 
-Figure produced using Microsoft Powerpoint.  Figure reproduced below.
+Figure produced using Microsoft Powerpoint. Figure reproduced below.
 
 ![](./other_figures/SPI_dashboard.png)
 
@@ -944,7 +942,6 @@ pcorr
 ```
 
 ## Figure M.3. Contribution of Each Pillar to SPI Score, by Country Income Level
-
 
 ```{r}
 #| label: decompstacked
@@ -1042,9 +1039,10 @@ pcorr
   ) +
     guides(fill=guide_legend(nrow=2,byrow=TRUE))  
 ```
-## Table 1. Comparing the SPI and Other Data and Statistics Indexes  
 
-Table produced using Microsoft Word.  Numbers come from research on each index.
+## Table 1. Comparing the SPI and Other Data and Statistics Indexes
+
+Table produced using Microsoft Word. Numbers come from research on each index.
 
 ## Figure 1. Number of Household Surveys vs. Country Income, 1982- 2022
 
@@ -1081,7 +1079,8 @@ ggplot(pip_df, aes(x=mean_welfare, y=number_surveys)) +
         )
 
 ```
-**Note**: This figure employs data from the World Bank’s PIP database.
+
+**Note**: This figure employs data from the World Bank's PIP database.
 
 ## Figure 2. Mapping Other Data Tools to SPI Framework
 
@@ -1220,7 +1219,6 @@ volatility_df <- SPI %>%
   
 ```
 
-
 ## Measuring Country Progress over time
 
 ```{r}
@@ -1273,12 +1271,12 @@ ODIN_prediction_data <- prediction_data %>%
 
 This analysis explores countries that experienced large deviations from their country specific time trends in the year 2022 for both the SPI and ODIN indices.
 
-For each country, a country specific time trend was calculated using data for that country from 2016 to 2020.  This time trend was calculated using OLS regression of the index (SPI or ODIN as the case may be) on the year.  Each regression is calculated separately by country. A predicted value based on these regressions is then calculated for the year 2022.  
+For each country, a country specific time trend was calculated using data for that country from 2016 to 2020. This time trend was calculated using OLS regression of the index (SPI or ODIN as the case may be) on the year. Each regression is calculated separately by country. A predicted value based on these regressions is then calculated for the year 2022.
 
 A set of 15 countries that are the largest over-performers and 15 of the largest underperformers are shown below for each index.
 
-
 Figure. Over/Under-Performers in 2022 for SPI and ODIN overall scores compared to 5 year country trends.
+
 ```{r}
 #| label: overunder
 #| fig-width: 9
@@ -1365,8 +1363,8 @@ spi_overperformers_plot + odin_overperformers_plot +
                   )
 ```
 
-
 Figure. Over/Under-Performers in 2021 for SPI and ODIN overall scores compared to 5 year country trends.
+
 ```{r}
 #| label: overunder2
 #| fig-width: 9
@@ -1507,10 +1505,10 @@ performers_df <- spi_performers_df %>%
 cor(performers_df$spi_resid, performers_df$odin_resid)
 ```
 
-
 Movement between quintiles
 
 Table. Top Movers for SPI and ODIN between 2016 and 2022.
+
 ```{r}
 SPI_quantiles <- SPI %>% 
     filter(date>2015) %>%
@@ -1563,10 +1561,7 @@ quantiles_df %>%
   autofit()
 ```
 
-
 ## Figure 3. Trends in Overall ODIN and SPI Scores, 2016-2022
-
-
 
 ```{r}
 #| label: volatilityplt12
@@ -1778,8 +1773,7 @@ ukr_diff <- abs(ukr_num2-ukr_num1)
 
 ```
 
-
-## Figure 4. Absolute Value of Correlation between Key SDGs and Indexes 
+## Figure 4. Absolute Value of Correlation between Key SDGs and Indexes
 
 ```{r}
 #| label: sdgcordf
@@ -2064,18 +2058,15 @@ ggplot(fig, aes(x=var, y=abs(SPI...1))) +
         legend.position = 'top')
 ```
 
-
-
 ## Figure 6. Theory of Change
 
 Figure produced using Microsoft Powerpoint.
 
 ![](./other_figures/SPI_theory_change.png)
 
+## Table A.1. An Overview of the World Bank's Statistical Capacity Index (SCI) in Selected Recent Studies
 
-## Table A.1. An Overview of the World Bank’s Statistical Capacity Index (SCI) in Selected Recent Studies  
-
-Table produced using Microsoft Word.  Articles gathered through a literature review.
+Table produced using Microsoft Word. Articles gathered through a literature review.
 
 ## Table A.2. Description of SPI Dimensions
 
@@ -2087,15 +2078,13 @@ Table produced using Microsoft Word, based on SPI metadata and UN SDG Indicator 
 
 ## Table A.4. SPI overall score and Pillar Scores in 2022
 
-Below, the full list of countries by their SPI overall score in 2022 is presented. The first column is the country name and the following columns are the overall SPI overall score, and then the sub-scores for pillars 1, 2, 3, 4, and 5.
-The purpose of the SPI is to help countries assess and improve the performance of their statistical systems. The presentation of SPI overall scores is designed to reflect that aim. Small differences between countries should not be stressed since they can reflect imprecision arising from the currently available indicators rather than meaningful differences in performance. Instead, the presentation of overall SPI scores focuses on larger groupings of countries reflecting broad categories of performance as measured by the indicator framework. In total there are 186 countries with sufficient data to compute an index value. This set of countries covers 99.3 percent of the world population.
-Countries shaded in dark orange are the lowest performing, countries in dark green are the highest performing. Countries are grouped into five groups:
+Below, the full list of countries by their SPI overall score in 2022 is presented. The first column is the country name and the following columns are the overall SPI overall score, and then the sub-scores for pillars 1, 2, 3, 4, and 5. The purpose of the SPI is to help countries assess and improve the performance of their statistical systems. The presentation of SPI overall scores is designed to reflect that aim. Small differences between countries should not be stressed since they can reflect imprecision arising from the currently available indicators rather than meaningful differences in performance. Instead, the presentation of overall SPI scores focuses on larger groupings of countries reflecting broad categories of performance as measured by the indicator framework. In total there are 186 countries with sufficient data to compute an index value. This set of countries covers 99.3 percent of the world population. Countries shaded in dark orange are the lowest performing, countries in dark green are the highest performing. Countries are grouped into five groups:
 
-* **Top Quintile**:  Countries in the Top quintile are classified in this group.  Shading in <span style="color:#2ec4b6">dark green</span>.    
-* **4th Quintile**: Countries in the 4th quintile, or those above the 60th percentile but below the 80th percentile are in this group.  Shading in <span style="color:#acece7">light green</span>.    
-* **3rd Quintile**: Countries in the 3rd quintile, or those between the 40th and 60th percentile, are classified in this group.  Shading in <span style="color:#f1dc76">yellow</span>.  
-* **2nd Quintile**: Countries in the 2nd quintile, or those above the 20th percentile but below the 40th percentile, are in this group.  Shading in <span style="color:#ffbf69">light orange</span>.  
-* **Bottom 20%**: Countries in the bottom 20% are classified in this group.  Shading in <span style="color:#ff9f1c">dark orange </span>.  
+-   **Top Quintile**: Countries in the Top quintile are classified in this group. Shading in [dark green]{style="color:#2ec4b6"}.\
+-   **4th Quintile**: Countries in the 4th quintile, or those above the 60th percentile but below the 80th percentile are in this group. Shading in [light green]{style="color:#acece7"}.\
+-   **3rd Quintile**: Countries in the 3rd quintile, or those between the 40th and 60th percentile, are classified in this group. Shading in [yellow]{style="color:#f1dc76"}.\
+-   **2nd Quintile**: Countries in the 2nd quintile, or those above the 20th percentile but below the 40th percentile, are in this group. Shading in [light orange]{style="color:#ffbf69"}.\
+-   **Bottom 20%**: Countries in the bottom 20% are classified in this group. Shading in [dark orange ]{style="color:#ff9f1c"}.
 
 ```{r}
 #arrange table and format
@@ -2178,7 +2167,6 @@ FitFlextableToPage(index_tab)
 ## Table A.5. Comparison of SPI to Other Statistical and Development Indices
 
 Table produced using Microsoft Word and a review of other indices.
-
 
 ## Table A.6. Bivariate Correlation between Statistical Indexes and Key Development Outcomes
 
@@ -2279,8 +2267,8 @@ tab <- as_tibble(cbind(index_cor, index_sig,var=sdg_names), .name_repair="univer
   add_header_lines('Table. Correlation between Development Outcomes')
 ```
 
-
 ## Table A.7. Testing for Bivaration Correlation between Statistical Indexes and Key Development Outcomes
+
 ```{r}
 # Create a correlation matrix
 cor_matrix <- index_cor
@@ -2540,7 +2528,6 @@ flextable(comb_tab) %>%
 
 ```
 
-
 Blank
 
 ```{r}
@@ -2714,8 +2701,7 @@ flextable(comb_tab) %>%
 
 ```
 
-
-Table A.9.  Comparison of Statistical Indices to Key Development Indices
+Table A.9. Comparison of Statistical Indices to Key Development Indices
 
 ```{r}
 #get correlations with pvalues
@@ -2912,7 +2898,6 @@ flextable(pval_df) %>%
   align(i=1, part="header", align="center")
 ```
 
-
 Blank.
 
 ```{r}
@@ -3004,7 +2989,6 @@ flextable(comb_tab) %>%
 
 
 ```
-
 
 Blank
 
@@ -3126,7 +3110,6 @@ pval_df <- as.data.frame(p_values) %>%
 
 ```
 
-
 ```{r}
 
 ## COmbined table
@@ -3180,7 +3163,6 @@ flextable(comb_tab) %>%
 
 
 ```
-
 
 ```{r}
 #test differences between models
@@ -3336,6 +3318,7 @@ gdb_reg_df <- read_csv(paste0(output_dir, "/GDB_formatted_data.csv")) %>%
 
 
 ```
+
 ```{r}
 
 
@@ -3422,7 +3405,6 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 
 ```
 
-
 ## Table A.9. Relationship between Government Effectiveness from Worldwide Governance Indicators and SPI scores, 2016-2022
 
 ```{r}
@@ -3482,7 +3464,6 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
               )
 ```
 
-
 ```{r}
 p <- plm::plm(WGI.OVL ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
 print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
@@ -3498,7 +3479,8 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 
 
 ```
-## Table A.10.  Relationship between the Economic Complexity Index and SPI scores, 2016-2022
+
+## Table A.10. Relationship between the Economic Complexity Index and SPI scores, 2016-2022
 
 ```{r}
 
@@ -3556,7 +3538,6 @@ modelsummary(SDG_models,
               )
 ```
 
-
 ```{r}
 p <- plm::plm(eci_value ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
 print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
@@ -3573,7 +3554,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 
 ```
 
-## Table A.11.  Relationship between the Environmental Performance Index and SPI scores, 2016-2022
+## Table A.11. Relationship between the Environmental Performance Index and SPI scores, 2016-2022
 
 ```{r}
 
@@ -3631,7 +3612,6 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
               )
 ```
 
-
 ```{r}
 p <- plm::plm(env_perform_index ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
 print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
@@ -3649,7 +3629,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 
 ```
 
-## Table A.12.  Relationship between the OECD Better Life Index and SPI scores, 2016-2022
+## Table A.12. Relationship between the OECD Better Life Index and SPI scores, 2016-2022
 
 ```{r}
 
@@ -3707,7 +3687,6 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
               )
 ```
 
-
 ```{r}
 p <- plm::plm(better_life_index ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
 print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2))) 
@@ -3725,7 +3704,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 
 ```
 
-## Table A.13.  Relationship between the UN Human Development Index and SPI scores, 2016-2022
+## Table A.13. Relationship between the UN Human Development Index and SPI scores, 2016-2022
 
 ```{r}
 
@@ -3783,7 +3762,6 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
               )
 ```
 
-
 ```{r}
 p <- plm::plm(hdi_value ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
 print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2))) 
@@ -3801,7 +3779,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 
 ```
 
-## Table A.14.  Relationship between the SDG Index Overall Score from the 2023 Sustainable Development Report and SPI scores, 2016-2022
+## Table A.14. Relationship between the SDG Index Overall Score from the 2023 Sustainable Development Report and SPI scores, 2016-2022
 
 ```{r}
 
@@ -3859,7 +3837,6 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
               )
 ```
 
-
 ```{r}
 p <- plm::plm(sdg_index_score ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
 print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2))) 
@@ -3877,8 +3854,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 
 ```
 
-
-## Table A.15.  Relationship between the WB Human Capital Index and SPI scores, 2016-2022
+## Table A.15. Relationship between the WB Human Capital Index and SPI scores, 2016-2022
 
 ```{r}
 
@@ -3936,7 +3912,6 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
               )
 ```
 
-
 ```{r}
 p <- plm::plm(HD.HCI.OVRL ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
 print(paste0("Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
@@ -3954,8 +3929,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 
 ```
 
-
-## Table A.16.  Relationship between the World Press Freedom Index and SPI scores, 2016-2022
+## Table A.16. Relationship between the World Press Freedom Index and SPI scores, 2016-2022
 
 ```{r}
 
@@ -4012,7 +3986,6 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
               escape = FALSE
               )
 ```
-
 
 ```{r}
 p <- plm::plm(press_free_score ~  SPI.INDEX, index=c('country', 'date'), data=reg_df, model='random') 
@@ -4739,6 +4712,7 @@ print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma
 ## Figure A.1. SPI Score, by Region and Income
 
 Panel A. SPI Overall Score
+
 ```{r}
 #| label: map
 #| fig-width: 9
@@ -4750,7 +4724,7 @@ spi_mapper('spi_index_df','SPI.INDEX','')
 
 ```
 
-Panel B. SPI Overall Score by Region 
+Panel B. SPI Overall Score by Region
 
 ```{r}
 #| label: spiregcharts
@@ -4763,7 +4737,7 @@ spi_region_charts('spi_index_df','SPI.INDEX','SPI Overall Score')
 
 ```
 
-Panel C. SPI Overall Score by Income Levels  
+Panel C. SPI Overall Score by Income Levels
 
 ```{r}
 #| label: spiincomecharts
@@ -4866,12 +4840,11 @@ growth_plot <- function(variables, name) {
 growth_plot('SPI.INDEX', 'SPI Overall Score')
 ```
 
+## Table B.1: Comparing the SPIs and the SCI
 
-## Table B.1: Comparing the SPIs and the SCI 
+Table produced using Microsoft Word.
 
-Table produced using Microsoft Word. 
-
-## Figure B.1:  Volatility of SPI and SCI Scores between 2016 and 2020
+## Figure B.1: Volatility of SPI and SCI Scores between 2016 and 2020
 
 ```{r}
 #| label: volatilitydf
@@ -4885,6 +4858,7 @@ volatility_df <- SPI %>%
   left_join(sci_df) %>%
   select(country, iso3c, date,income, region, SPI.INDEX, SCI) %>%
   distinct()
+           
            
   
 ```
