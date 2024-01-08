@@ -286,7 +286,7 @@
 "VEN","VE","Venezuela, RB","Caracas",-69.8371,9.08165,"LCN","ZJ","Latin America & Caribbean",NA,NA,NA,"INX","XY","Not classified","IBD","XF","IBRD"
 "VGB","VG","British Virgin Islands","Road Town",-64.623056,18.431389,"LCN","ZJ","Latin America & Caribbean",NA,NA,NA,"HIC","XD","High income","LNX","XX","Not classified"
 "VIR","VI","Virgin Islands (U.S.)","Charlotte Amalie",-64.8963,18.3358,"LCN","ZJ","Latin America & Caribbean",NA,NA,NA,"HIC","XD","High income","LNX","XX","Not classified"
-"VNM","VN","Vietnam","Hanoi",105.825,21.0069,"EAS","Z4","East Asia & Pacific","EAP","4E","East Asia & Pacific (excluding high income)","LMC","XN","Lower middle income","IBD","XF","IBRD"
+"VNM","VN","Viet Nam","Hanoi",105.825,21.0069,"EAS","Z4","East Asia & Pacific","EAP","4E","East Asia & Pacific (excluding high income)","LMC","XN","Lower middle income","IBD","XF","IBRD"
 "VUT","VU","Vanuatu","Port-Vila",168.321,-17.7404,"EAS","Z4","East Asia & Pacific","EAP","4E","East Asia & Pacific (excluding high income)","LMC","XN","Lower middle income","IDX","XI","IDA"
 "WLD","1W","World",NA,NA,NA,NA,NA,"Aggregates",NA,NA,NA,NA,NA,"Aggregates",NA,NA,"Aggregates"
 "WSM","WS","Samoa","Apia",-171.752,-13.8314,"EAS","Z4","East Asia & Pacific","EAP","4E","East Asia & Pacific (excluding high income)","LMC","XN","Lower middle income","IDX","XI","IDA"

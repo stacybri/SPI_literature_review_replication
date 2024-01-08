@@ -1647,6 +1647,7 @@ p1 <- ggplot(volatility_scatter_df, aes(x=value_2016, y=value_2022,color=indicat
 #| fig-height: 8
 
 country_samp <- sample(unique(volatility_df$country),25)
+
 volatility_trace_df <- volatility_df %>%
   as_tibble() %>%
   filter(date>=2016) %>%
@@ -1664,6 +1665,9 @@ volatility_trace_df <- volatility_df %>%
 #randomly seleect a few countries  
 set.seed(72456)
 country_samp <- sample(unique(volatility_trace_df$country),15)
+country_samp <- c("Belgium", "Moldova", "Belarus", "Sao Tome and Principe", "St. Kitts and Nevis", "France",
+                  "Cambodia", "Belize", "Ukraine", "Nigeria", "Serbia",
+                  "Rwanda", "Lithuania", "Luxembourg", "Romania")
 volatility_trace_sample_df <- volatility_trace_df  %>%
   filter(country %in% country_samp)
 
