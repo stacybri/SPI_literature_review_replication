@@ -99,7 +99,7 @@
 "TKM",2021,6,"TM","Turkmenistan","Ashgabat",58.3794,37.9509,"ECS","Z7","Europe & Central Asia","ECA","7E","Europe & Central Asia (excluding high income)","UMC","XT","Upper middle income","IBD","XF","IBRD"
 "TTO",2021,22,"TT","Trinidad and Tobago","Port-of-Spain",-61.4789,10.6596,"LCN","ZJ","Latin America & Caribbean",NA,NA,NA,"HIC","XD","High income","IBD","XF","IBRD"
 "TUN",2021,23,"TN","Tunisia","Tunis",10.21,36.7899,"MEA","ZQ","Middle East & North Africa","MNA","XQ","Middle East & North Africa (excluding high income)","LMC","XN","Lower middle income","IBD","XF","IBRD"
-"TWN",2021,51,"TW","Taiwan, China",NA,NA,NA,"EAS","Z4","East Asia & Pacific",NA,NA,NA,"HIC","XD","High income","LNX","XX","Not classified"
+"TWN",2021,51,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 "UGA",2021,31,"UG","Uganda","Kampala",32.5729,0.314269,"SSF","ZG","Sub-Saharan Africa","SSA","ZF","Sub-Saharan Africa (excluding high income)","LIC","XM","Low income","IDX","XI","IDA"
 "UKR",2021,55,"UA","Ukraine","Kiev",30.5038,50.4536,"ECS","Z7","Europe & Central Asia","ECA","7E","Europe & Central Asia (excluding high income)","LMC","XN","Lower middle income","IBD","XF","IBRD"
 "URY",2021,55,"UY","Uruguay","Montevideo",-56.0675,-34.8941,"LCN","ZJ","Latin America & Caribbean",NA,NA,NA,"HIC","XD","High income","IBD","XF","IBRD"
