@@ -1,0 +1,62 @@
+Package: pipr
+Title: Client for the Poverty and Inequality Platform ('PIP') API
+Version: 1.0.0
+Authors@R: 
+    c(person(given = "Tony",
+            family = "Fujs",
+            role = c("aut", "cre"),
+            email = "tonyfujs@gmail.com"),
+     person(given = "Aleksander",
+            family = "Eilertsen",
+            role = "aut",
+            email = "aeilertsen@worldbank.org"),
+      person(given = "Ronak",
+            family = "Shah",
+            role =  "aut",
+            email = "shahronak47@yahoo.in"),
+      person(given = "R.Andrés",
+            family = "Castañeda",
+            role = "aut",
+            email = "acastanedaa@worldbank.org"),
+     person(given = "World Bank",
+            role = "cph")
+     )
+Description: An interface to compute poverty and inequality 
+    indicators for more than 160 countries and regions from the World
+    Bank's database of household surveys. 
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+URL: https://worldbank.github.io/pipr/,
+        https://github.com/worldbank/pipr,
+        <https://pip.worldbank.org/api>
+BugReports: https://github.com/worldbank/pipr/issues
+Suggests: covr, testthat (>= 3.0.0), spelling, knitr, rmarkdown,
+        markdown, callr, mockery, ggplot2, tidyr, ggthemes, forcats,
+        scales, dplyr, readr
+Language: en-US
+Imports: attempt, curl, httr, jsonlite, tibble, purrr, memoise, cachem,
+        data.table, cli, rlang, utils
+Depends: R (>= 3.6.0)
+Config/testthat/edition: 3
+Date: 2023-04-28
+RemoteType: github
+RemoteHost: api.github.com
+RemoteRepo: pipr
+RemoteUsername: worldbank
+RemoteRef: HEAD
+RemoteSha: e0b40dcf4eed2a5a7c181222e75d8d6dff11cb98
+GithubRepo: pipr
+GithubUsername: worldbank
+GithubRef: HEAD
+GithubSHA1: e0b40dcf4eed2a5a7c181222e75d8d6dff11cb98
+NeedsCompilation: no
+Packaged: 2024-01-08 17:24:02 UTC; WB469649
+Author: Tony Fujs [aut, cre],
+  Aleksander Eilertsen [aut],
+  Ronak Shah [aut],
+  R.Andrés Castañeda [aut],
+  World Bank [cph]
+Maintainer: Tony Fujs <tonyfujs@gmail.com>
+Built: R 4.3.0; ; 2024-01-08 17:24:03 UTC; windows

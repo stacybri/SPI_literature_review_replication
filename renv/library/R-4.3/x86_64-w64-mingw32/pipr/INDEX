@@ -1,0 +1,9 @@
+args_to_string          convert arguments and values of a function to a
+                        string to parse into other functions
+call_aux                call a table from .pip env
+check_api               Check internet connection and API status
+display_aux             Display available auxiliary tables
+get_aux                 Get auxiliary data
+get_pip_info            Get PIP info
+get_stats               Get poverty and inequality statistics
+get_versions            Get versions

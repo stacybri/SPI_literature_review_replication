@@ -890,7 +890,7 @@ if (specification=="latest") {
 } else if (specification=="3yr"){
   comparison_df <- read_csv(paste0(output_dir, "/SPI_Index_SDG_comparisons_data_3yr_avg.csv"))
 } else if (specification=="5yr"){
-  comparison_df <- read_csv(paste0(output_dir, "/SPI_Index_SDG_comparisons_data_5yr_avg.csv"))
+  comparison_df <- read_csv(paste0(output_dir, ".csv"))
 }
 
 #read in regression data with covariates

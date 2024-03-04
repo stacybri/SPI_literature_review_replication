@@ -1,0 +1,127 @@
+allVarMatchMessage      allVarMatchMessage
+checkEmpty              checkEmpty
+checkForRCompareCol     checkForRcompareCol
+checkKeysExist          checkKeysExist
+checkNA                 CheckNA
+checkUniqueness         Checks that a list of indexes areunique
+cleanColNames           cleanColNames : get colnames, remove leading
+                        and trailing whitespace and push to upper case
+coerceData              coerceData
+coerceFactorsToChar     coerceFactorsToChar: convert all factor type
+                        fields to characters
+collapseClasses         collapseClasses. Collapse the classes of an
+                        object to a single string
+colsWithUnequalValues   colsWithUnequalValues: a dataframe summarising
+                        a column with unequal values
+compareData             Compare data. Wrapper for comparison
+                        functionality.
+compareNames            compareNames : compare the intersect of
+                        colInfoA and colInfoB and return boolean of
+                        matched columns for each data frame
+createAntiSubset        Create a dataframe of the rows that don't match
+createCleaningInfo      Converts cleaning info into a format consumable
+                        by updateCompareObject.
+createColMatching       Converts the output of the column matching
+                        logic to something consumable by
+                        updateCompareObject.
+createCompareObject     Generates an empty list of the correct class to
+                        store results
+createMeta              Takes the raw info for the meta block of the
+                        output and puts it in a format usable by the
+                        updateCompareObject function
+createMismatchObject    Create mismatch object
+createMismatches        Create mismatch object
+createReportText        createReportText: prepares text which is used
+                        in the summary report Saves R markdown and HTML
+                        reports in the area specified by the user.
+                        Reports are called RcompareReport.Rmd (.html)
+                        Uses knitr package to create tables in the
+                        markdown (createReportText function) and HTML
+                        report.
+createRowMatching       function for updating a compare object with
+                        information passed to it from the match rows
+                        function
+createTextSummary       createTextSummary: create a text based summary
+                        of an dataCompareR object
+currentObjVersion       Place to store and access the current object
+                        version.
+executeCoercions        executeCoercions:
+generateMismatchData    Extract data from a dataCompareR comparison
+getCoercions            Subsets on the variables that have a coercion.
+getMismatchColNames     Extracts the column names only in one data
+                        frame from a table of match information
+is.dataCompareRobject   Check object is of class dataCompareRobject
+isNotNull               isNotNull: is object not null
+isSingleNA              isSingleNA
+listObsNotVerbose       listObsNotVerbose
+listObsVerbose          listObsVerbose
+locateMismatches        Checks whether elements in two input data
+                        frames are equal.
+makeValidKeys           makeValidKeys
+makeValidNames          makeValidNames
+matchColumns            matchColumns : create subset of DFA and DFB to
+                        contain matching column names for both data
+                        frames
+matchMultiIndex         Generate two dataframes that contain the same
+                        rows based on a two-column index
+matchNoIndex            Generate two dataframes that contain the same
+                        rows based on a two-column index
+matchRows               Generate two dataframes and returns subsets of
+                        these dataframes that have shared rows.
+matchSingleIndex        Generate two dataframes that contain the same
+                        rows based on a single index
+metaDataInfo            Creates a list of info about the dataframe.
+mismatchHighStop        mismatchHighStop Checks if we've exceeded
+                        threshold of mismatches
+orderColumns            orderColumns: order columns by treated column
+                        names
+outputSectionHeader     outputSectionHeader: creates an
+                        outputSectionHeader
+prepareData             prepareData Prepares data for comparison in 3
+                        stages.  1. Match columns - filter dataframes
+                        to those columns that match and summarise
+                        differences 2. Match rows - filter dataframes
+                        to those rows that match and summarise
+                        differences 3. Coerce data
+print.dataCompareRobject
+                        Printing RCompare Output
+print.summary.dataCompareRobject
+                        Printing summaryRCompare Output
+processFlow             processFlow Handles the process flow for the
+                        whole package
+rCompare                Compare two data frames
+rcompObjItemLength      rcompObjItemLength: return length of an item,
+                        returning 0 if null, and handling the fact that
+                        we might have a data frames or a vector
+rounddf                 Round all numeric fields in a data frame
+saveReport              Save a report based on a dataCompareR object
+subsetDataColumns       subsetDataColumns : create subset of DFA and
+                        DFB to contain matching column names for both
+                        data frames
+summary.dataCompareRobject
+                        Summarizing RCompare Output
+trimCharVars            trimCharVars: trim white spaces in character
+                        variables from an input dataframe
+updateCompareObject     Generic function for updating a compare object
+                        with information passed to it, that has methods
+                        based on the class of the info argument.
+updateCompareObject.cleaninginfo
+                        Updates cleaning info in the compare object
+updateCompareObject.colmatching
+                        Adds a colMatching block to the output
+updateCompareObject.matches
+                        Adds a colMatching block to the output
+updateCompareObject.meta
+                        Takes raw info for meta and adds it to the
+                        compare object
+updateCompareObject.mismatches
+                        Adds a colMatching block to the output
+updateCompareObject.rowmatching
+                        Adds a rowMatching block to the output
+validateArguments       validateArguments
+validateData            validateData : routine to validate the input
+                        data
+variableDetails         Create variable mismatch details
+variableMismatches      Create variable mismatch table
+warnLargeData           Warn users if the calculation is likely to be
+                        slow

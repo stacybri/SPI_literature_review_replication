@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head><title>R: Compare Two Data Frames and Summarise the Difference</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+<link rel="stylesheet" type="text/css" href="R.css" />
+</head><body><div class="container">
+<h1> Compare Two Data Frames and Summarise the Difference
+<img class="toplogo" src="../../../doc/html/Rlogo.svg" alt="[R logo]" />
+</h1>
+<hr/>
+<div style="text-align: center;">
+<a href="../../../doc/html/packages.html"><img class="arrow" src="../../../doc/html/left.jpg" alt="[Up]" /></a>
+<a href="../../../doc/html/index.html"><img class="arrow" src="../../../doc/html/up.jpg" alt="[Top]" /></a>
+</div><h2>Documentation for package &lsquo;dataCompareR&rsquo; version 0.1.4</h2>
+
+<ul><li><a href="../DESCRIPTION">DESCRIPTION file</a>.</li>
+<li><a href="../doc/index.html">User guides, package vignettes and other documentation.</a></li>
+<li><a href="../NEWS">Package NEWS</a>.</li>
+</ul>
+
+<h2>Help Pages</h2>
+
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="allVarMatchMessage.html">allVarMatchMessage</a></td>
+<td>allVarMatchMessage</td></tr>
+<tr><td style="width: 25%;"><a href="checkEmpty.html">checkEmpty</a></td>
+<td>checkEmpty</td></tr>
+<tr><td style="width: 25%;"><a href="checkForRCompareCol.html">checkForRCompareCol</a></td>
+<td>checkForRcompareCol</td></tr>
+<tr><td style="width: 25%;"><a href="checkKeysExist.html">checkKeysExist</a></td>
+<td>checkKeysExist</td></tr>
+<tr><td style="width: 25%;"><a href="checkNA.html">checkNA</a></td>
+<td>CheckNA</td></tr>
+<tr><td style="width: 25%;"><a href="checkUniqueness.html">checkUniqueness</a></td>
+<td>Checks that a list of indexes areunique</td></tr>
+<tr><td style="width: 25%;"><a href="cleanColNames.html">cleanColNames</a></td>
+<td>cleanColNames : get colnames, remove leading and trailing whitespace and push to upper case</td></tr>
+<tr><td style="width: 25%;"><a href="coerceData.html">coerceData</a></td>
+<td>coerceData</td></tr>
+<tr><td style="width: 25%;"><a href="coerceFactorsToChar.html">coerceFactorsToChar</a></td>
+<td>coerceFactorsToChar: convert all factor type fields to characters</td></tr>
+<tr><td style="width: 25%;"><a href="collapseClasses.html">collapseClasses</a></td>
+<td>collapseClasses. Collapse the classes of an object to a single string</td></tr>
+<tr><td style="width: 25%;"><a href="colsWithUnequalValues.html">colsWithUnequalValues</a></td>
+<td>colsWithUnequalValues: a dataframe summarising a column with unequal values</td></tr>
+<tr><td style="width: 25%;"><a href="compareData.html">compareData</a></td>
+<td>Compare data. Wrapper for comparison functionality.</td></tr>
+<tr><td style="width: 25%;"><a href="compareNames.html">compareNames</a></td>
+<td>compareNames : compare the intersect of colInfoA and colInfoB and return boolean of matched columns for each data frame</td></tr>
+<tr><td style="width: 25%;"><a href="createAntiSubset.html">createAntiSubset</a></td>
+<td>Create a dataframe of the rows that don't match</td></tr>
+<tr><td style="width: 25%;"><a href="createCleaningInfo.html">createCleaningInfo</a></td>
+<td>Converts cleaning info into a format consumable by updateCompareObject.</td></tr>
+<tr><td style="width: 25%;"><a href="createColMatching.html">createColMatching</a></td>
+<td>Converts the output of the column matching logic to something consumable by updateCompareObject.</td></tr>
+<tr><td style="width: 25%;"><a href="createCompareObject.html">createCompareObject</a></td>
+<td>Generates an empty list of the correct class to store results</td></tr>
+<tr><td style="width: 25%;"><a href="createMeta.html">createMeta</a></td>
+<td>Takes the raw info for the meta block of the output and puts it in a format usable by the updateCompareObject function</td></tr>
+<tr><td style="width: 25%;"><a href="createMismatches.html">createMismatches</a></td>
+<td>Create mismatch object</td></tr>
+<tr><td style="width: 25%;"><a href="createMismatchObject.html">createMismatchObject</a></td>
+<td>Create mismatch object</td></tr>
+<tr><td style="width: 25%;"><a href="createReportText.html">createReportText</a></td>
+<td>createReportText: prepares text which is used in the summary report Saves R markdown and HTML reports in the area specified by the user. Reports are called RcompareReport.Rmd (.html) Uses knitr package to create tables in the markdown (createReportText function) and HTML report.</td></tr>
+<tr><td style="width: 25%;"><a href="createRowMatching.html">createRowMatching</a></td>
+<td>function for updating a compare object with information passed to it from the match rows function</td></tr>
+<tr><td style="width: 25%;"><a href="createTextSummary.html">createTextSummary</a></td>
+<td>createTextSummary: create a text based summary of an dataCompareR object</td></tr>
+<tr><td style="width: 25%;"><a href="currentObjVersion.html">currentObjVersion</a></td>
+<td>Place to store and access the current object version.</td></tr>
+<tr><td style="width: 25%;"><a href="executeCoercions.html">executeCoercions</a></td>
+<td>executeCoercions:</td></tr>
+<tr><td style="width: 25%;"><a href="generateMismatchData.html">generateMismatchData</a></td>
+<td>Extract data from a dataCompareR comparison</td></tr>
+<tr><td style="width: 25%;"><a href="getCoercions.html">getCoercions</a></td>
+<td>Subsets on the variables that have a coercion.</td></tr>
+<tr><td style="width: 25%;"><a href="getMismatchColNames.html">getMismatchColNames</a></td>
+<td>Extracts the column names only in one data frame from a table of match information</td></tr>
+<tr><td style="width: 25%;"><a href="is.dataCompareRobject.html">is.dataCompareRobject</a></td>
+<td>Check object is of class dataCompareRobject</td></tr>
+<tr><td style="width: 25%;"><a href="isNotNull.html">isNotNull</a></td>
+<td>isNotNull: is object not null</td></tr>
+<tr><td style="width: 25%;"><a href="isSingleNA.html">isSingleNA</a></td>
+<td>isSingleNA</td></tr>
+<tr><td style="width: 25%;"><a href="listObsNotVerbose.html">listObsNotVerbose</a></td>
+<td>listObsNotVerbose</td></tr>
+<tr><td style="width: 25%;"><a href="listObsVerbose.html">listObsVerbose</a></td>
+<td>listObsVerbose</td></tr>
+<tr><td style="width: 25%;"><a href="locateMismatches.html">locateMismatches</a></td>
+<td>Checks whether elements in two input data frames are equal.</td></tr>
+<tr><td style="width: 25%;"><a href="makeValidKeys.html">makeValidKeys</a></td>
+<td>makeValidKeys</td></tr>
+<tr><td style="width: 25%;"><a href="makeValidNames.html">makeValidNames</a></td>
+<td>makeValidNames</td></tr>
+<tr><td style="width: 25%;"><a href="matchColumns.html">matchColumns</a></td>
+<td>matchColumns : create subset of DFA and DFB to contain matching column names for both data frames</td></tr>
+<tr><td style="width: 25%;"><a href="matchMultiIndex.html">matchMultiIndex</a></td>
+<td>Generate two dataframes that contain the same rows based on a two-column index</td></tr>
+<tr><td style="width: 25%;"><a href="matchNoIndex.html">matchNoIndex</a></td>
+<td>Generate two dataframes that contain the same rows based on a two-column index</td></tr>
+<tr><td style="width: 25%;"><a href="matchRows.html">matchRows</a></td>
+<td>Generate two dataframes and returns subsets of these dataframes that have shared rows.</td></tr>
+<tr><td style="width: 25%;"><a href="matchSingleIndex.html">matchSingleIndex</a></td>
+<td>Generate two dataframes that contain the same rows based on a single index</td></tr>
+<tr><td style="width: 25%;"><a href="metaDataInfo.html">metaDataInfo</a></td>
+<td>Creates a list of info about the dataframe.</td></tr>
+<tr><td style="width: 25%;"><a href="mismatchHighStop.html">mismatchHighStop</a></td>
+<td>mismatchHighStop Checks if we've exceeded threshold of mismatches</td></tr>
+<tr><td style="width: 25%;"><a href="orderColumns.html">orderColumns</a></td>
+<td>orderColumns: order columns by treated column names</td></tr>
+<tr><td style="width: 25%;"><a href="outputSectionHeader.html">outputSectionHeader</a></td>
+<td>outputSectionHeader: creates an outputSectionHeader</td></tr>
+<tr><td style="width: 25%;"><a href="prepareData.html">prepareData</a></td>
+<td>prepareData Prepares data for comparison in 3 stages.  1. Match columns - filter dataframes to those columns that match and summarise differences 2. Match rows - filter dataframes to those rows that match and summarise differences 3. Coerce data</td></tr>
+<tr><td style="width: 25%;"><a href="print.dataCompareRobject.html">print.dataCompareRobject</a></td>
+<td>Printing RCompare Output</td></tr>
+<tr><td style="width: 25%;"><a href="print.summary.dataCompareRobject.html">print.summary.dataCompareRobject</a></td>
+<td>Printing summaryRCompare Output</td></tr>
+<tr><td style="width: 25%;"><a href="processFlow.html">processFlow</a></td>
+<td>processFlow Handles the process flow for the whole package</td></tr>
+<tr><td style="width: 25%;"><a href="rCompare.html">rCompare</a></td>
+<td>Compare two data frames</td></tr>
+<tr><td style="width: 25%;"><a href="rcompObjItemLength.html">rcompObjItemLength</a></td>
+<td>rcompObjItemLength: return length of an item, returning 0 if null, and handling the fact that we might have a data frames or a vector</td></tr>
+<tr><td style="width: 25%;"><a href="rounddf.html">rounddf</a></td>
+<td>Round all numeric fields in a data frame</td></tr>
+<tr><td style="width: 25%;"><a href="saveReport.html">saveReport</a></td>
+<td>Save a report based on a dataCompareR object</td></tr>
+<tr><td style="width: 25%;"><a href="subsetDataColumns.html">subsetDataColumns</a></td>
+<td>subsetDataColumns : create subset of DFA and DFB to contain matching column names for both data frames</td></tr>
+<tr><td style="width: 25%;"><a href="summary.dataCompareRobject.html">summary.dataCompareRobject</a></td>
+<td>Summarizing RCompare Output</td></tr>
+<tr><td style="width: 25%;"><a href="trimCharVars.html">trimCharVars</a></td>
+<td>trimCharVars: trim white spaces in character variables from an input dataframe</td></tr>
+<tr><td style="width: 25%;"><a href="updateCompareObject.html">updateCompareObject</a></td>
+<td>Generic function for updating a compare object with information passed to it, that has methods based on the class of the info argument.</td></tr>
+<tr><td style="width: 25%;"><a href="updateCompareObject.cleaninginfo.html">updateCompareObject.cleaninginfo</a></td>
+<td>Updates cleaning info in the compare object</td></tr>
+<tr><td style="width: 25%;"><a href="updateCompareObject.colmatching.html">updateCompareObject.colmatching</a></td>
+<td>Adds a colMatching block to the output</td></tr>
+<tr><td style="width: 25%;"><a href="updateCompareObject.matches.html">updateCompareObject.matches</a></td>
+<td>Adds a colMatching block to the output</td></tr>
+<tr><td style="width: 25%;"><a href="updateCompareObject.meta.html">updateCompareObject.meta</a></td>
+<td>Takes raw info for meta and adds it to the compare object</td></tr>
+<tr><td style="width: 25%;"><a href="updateCompareObject.mismatches.html">updateCompareObject.mismatches</a></td>
+<td>Adds a colMatching block to the output</td></tr>
+<tr><td style="width: 25%;"><a href="updateCompareObject.rowmatching.html">updateCompareObject.rowmatching</a></td>
+<td>Adds a rowMatching block to the output</td></tr>
+<tr><td style="width: 25%;"><a href="validateArguments.html">validateArguments</a></td>
+<td>validateArguments</td></tr>
+<tr><td style="width: 25%;"><a href="validateData.html">validateData</a></td>
+<td>validateData : routine to validate the input data</td></tr>
+<tr><td style="width: 25%;"><a href="variableDetails.html">variableDetails</a></td>
+<td>Create variable mismatch details</td></tr>
+<tr><td style="width: 25%;"><a href="variableMismatches.html">variableMismatches</a></td>
+<td>Create variable mismatch table</td></tr>
+<tr><td style="width: 25%;"><a href="warnLargeData.html">warnLargeData</a></td>
+<td>Warn users if the calculation is likely to be slow</td></tr>
+</table>
+</div></body></html>
