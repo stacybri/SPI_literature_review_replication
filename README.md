@@ -42,7 +42,7 @@ The data are licensed under a Creative Commons/CC-BY-4.0 license.
 
 ### Data Sources
 
-The data used in this analysis comes from a variety of sources.  The main sources are the World Bank World Development Indicators (WDI), the Statistical Performance Indicators (SPI), the Open Data Inventory Index (ODIN), the Open Data Barometer (ODB), and the Global Data Barometer (GDB).  The data from these sources are used to construct the SPI index and the SDG index, as well as the other variables used in the paper.  The data are all publicly available.  The data are all included in the repository, so there is no need to download the data from the original sources.
+The data used in this analysis comes from a variety of sources.  The main sources are the World Bank World Development Indicators (WDI), the Statistical Performance Indicators (SPI), the Open Data Inventory Index (ODIN), the Open Data Barometer (ODB), and the Global Data Barometer (GDB).  The data are all publicly available.  The data are all included in the repository, so there is no need to download the data from the original sources.
 
 ### Data Description
 
