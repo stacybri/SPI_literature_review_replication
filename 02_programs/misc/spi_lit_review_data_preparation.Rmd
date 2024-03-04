@@ -493,6 +493,35 @@ sdg_names <- c('SDG 1: Extreme Poverty','SDG 2: Undernourishment','SDG 3: Matern
           'SDG 11: Population in Slums','SDG 12: Fossil Fuel Subsidies (% of GDP)','SDG 13: Greenhouse Gas Emissions','SDG 14: Marine protected areas','SDG 15: Terrestrial Protected Areas','SDG 16: Government Effectiveness','SDG 17: Total Debt Service', 'SDR: SDG Index Overall Score')
 ```
 
+Markdown table with variable and description in correlates_df
+| Variable | Description |
+| -- | -- |
+| SI.POV.DDAY | Proportion of population living below the national poverty line |
+| SI.POV.GINI | Gini index |
+| GE.EST | Government Effectiveness |
+| NY.GDP.PCAP.KD | GDP per capita (2015 constant $) |
+| HD.HCI.OVRL | Human Capital Index |
+| SN.ITK.DEFC.ZS | Prevalence of undernourishment |
+| SH.STA.MMRT | Maternal Mortality Ratio |
+| SE.LPV.PRIM | Learning Poverty |
+| SG.LAW.IND | Women, Business, Law Index |
+| SH.H2O.SMDW.ZS | Safely Managed Water |
+| EG.ELC.ACCS.ZS | Access to Electricity |
+| NV.IND.MANF.ZS | Manufacturing value added (% of GDP) |
+| EN.POP.SLUM.UR.ZS | Population in Slums |
+| subsidies | Fossil Fuel Subsidies (% of GDP) |
+| EN.ATM.GHGT.KT.CE | Greenhouse Gas Emissions |
+| ER.MRN.PTMR.ZS | Marine protected areas |
+| ER.LND.PTLD.ZS | Terrestrial Protected Areas |
+| DT.TDS.DECT.EX.ZS | Total Debt Service |
+| sdg_index_score | SDG Index Overall Score |
+| hdi_value | Human Development Index |
+| env_perform_index | Environmental Performance Index |
+| eci_value | Economic Complexity Index |
+| press_free_score | Press Freedom Index |
+| better_life_index | OECD Better Life Index |
+
+```{r}
 
 
 ```{r comparison, include=FALSE}
@@ -656,6 +685,16 @@ write_excel_csv(comparison_df, paste0(output_dir, "/SPI_Index_SDG_comparisons_da
 
 
 ```
+
+Markdown table with variable and description in comparison_df
+| Variable | Description |
+| -- | -- |
+| SPI.INDEX | Statistical Performance Indicators Overall Score |
+| SCI | Statistical Capacity Indicator Index |
+| ODIN_score | Open Data Index |
+| odb | Open Data Barometer |
+| gdb | Global Data Barometer |
+
 
 
 ### Do the same thing, but instead of latest year of data available take the average of 5 preceding years.
@@ -2382,8 +2421,31 @@ write_excel_csv(predictors_df, paste0(output_dir, "/SPI_regression_predictors.cs
 
 ```
 
+Create a markdown with the descriptions of the variables in people friendly format
 
-
+| Variable | Short Description |
+|----------|-------------|
+| SPI.INDEX | Statistical Performance Indicator (SPI) overall score |
+| SCI | Statistical Capacity Indicator (SCI) overall score |
+| ODIN | Open Data Index (ODIN) overall score |
+| ODB | Open Data Barometer (ODB) overall score |
+| GDB | Global Data Barometer (GDB) overall score |
+| IIAG | Ibrahim Index of African Governance (IIAG) overall score |
+| NY.GDP.PCAP.KD | GDP per capita (constant 2015 US$) |
+| NV.IND.MANF.ZS | Manufacturing, value added (% of GDP) |
+| NV.AGR.TOTL.ZS | Agriculture, forestry, and fishing, value added (% of GDP) |
+| NE.TRD.GNFS.ZS | Trade (% of GDP) |
+| HD.HCI.OVRL | Human Capital Index (HCI) overall score |
+| SE.PRM.ENRR | School enrollment, primary (% gross) |
+| BN.CAB.XOKA.GD.ZS | Current account balance (% of GDP) |
+| CC.EST | Control of Corruption |
+| GE.EST | Government Effectiveness |
+| PV.EST | Political Stability and Absence of Violence |
+| RQ.EST | Regulatory Quality |
+| RL.EST | Rule of Law  |
+| VA.EST | Voice and Accountability |
+| BX.KLT.DINV.WD.GD.ZS | Foreign direct investment, net inflows (% of GDP) |
+| SI.POV.DDAY | Poverty headcount ratio at $2.15 a day (2017 PPP) (% of population) |
 
 
 
