@@ -42,10 +42,7 @@ The data are licensed under a Creative Commons/CC-BY-4.0 license.
 
 ### Data Sources
 
-| Data.Name  | Data.Files | Location | Provided | Citation |
-| -- | -- | -- | -- | -- | 
-| World Development Indicators | WDIEXCEL.xlsx | 01_raw_data/ | TRUE | World Bank (2023). World Development Indicators.   |
-| UN SDG Database | IT_CEN_MGTN.csv; IT_MOB_OWN.csv; SD_MDP_MUHC.csv;... | 01_raw_data/sdg_data/ | TRUE | UN Statistics Division (2023). UN Global SDG Database. |
+The data used in this analysis comes from a variety of sources.  The main sources are the World Bank World Development Indicators (WDI), the Statistical Performance Indicators (SPI), the Open Data Inventory Index (ODIN), the Open Data Barometer (ODB), and the Global Data Barometer (GDB).  The data from these sources are used to construct the SPI index and the SDG index, as well as the other variables used in the paper.  The data are all publicly available.  The data are all included in the repository, so there is no need to download the data from the original sources.
 
 ### Data Description
 
