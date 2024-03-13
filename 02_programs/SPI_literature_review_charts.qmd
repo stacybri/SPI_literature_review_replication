@@ -6,10 +6,15 @@ format:
   docx:
     reference-doc: custom-reference-doc.docx
     number-sections: false
+    keep_md: true
 execute:
   echo: false
   warning: false
 dpi: 400
+knitr:
+  opts_chunk:
+    fig.path="./figures/"
+    
 ---
 
 ```{r}
