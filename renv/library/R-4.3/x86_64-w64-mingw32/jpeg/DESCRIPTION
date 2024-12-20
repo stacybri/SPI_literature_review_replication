@@ -15,3 +15,10 @@ Repository: CRAN
 Date/Publication: 2022-11-29 11:12:52 UTC
 Built: R 4.3.1; x86_64-w64-mingw32; 2023-10-20 00:52:28 UTC; windows
 Archs: x64
+RemoteType: standard
+RemotePkgRef: jpeg
+RemoteRef: jpeg
+RemoteRepos: https://archive.linux.duke.edu/cran
+RemoteReposName: CRAN
+RemotePkgPlatform: x86_64-w64-mingw32
+RemoteSha: 0.1-10

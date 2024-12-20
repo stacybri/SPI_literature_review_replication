@@ -1,14 +1,7 @@
 Package: numDeriv
 Version: 2016.8-1.1
 Title: Accurate Numerical Derivatives
-Description: Methods for calculating (usually) accurate
-	numerical first and second order derivatives. Accurate calculations 
-	are done using 'Richardson''s' extrapolation or, when applicable, a
-	complex step derivative is available. A simple difference 
-	method is also provided. Simple difference is (usually) less accurate
-	but is much quicker than 'Richardson''s' extrapolation and provides a 
-	useful cross-check. 
-	Methods are provided for real scalar and vector valued functions. 
+Description: Methods for calculating (usually) accurate numerical first and second order derivatives. Accurate calculations  are done using 'Richardson''s' extrapolation or, when applicable, a complex step derivative is available. A simple difference  method is also provided. Simple difference is (usually) less accurate but is much quicker than 'Richardson''s' extrapolation and provides a  useful cross-check.  Methods are provided for real scalar and vector valued functions.
 Depends: R (>= 2.11.1)
 LazyLoad: yes
 ByteCompile: yes
@@ -22,3 +15,10 @@ Packaged: 2019-06-04 11:04:44 UTC; hornik
 Repository: CRAN
 Date/Publication: 2019-06-06 09:51:09 UTC
 Built: R 4.3.1; ; 2023-10-20 00:51:24 UTC; windows
+RemoteType: standard
+RemotePkgRef: numDeriv
+RemoteRef: numDeriv
+RemoteRepos: https://archive.linux.duke.edu/cran
+RemoteReposName: CRAN
+RemotePkgPlatform: x86_64-w64-mingw32
+RemoteSha: 2016.8-1.1

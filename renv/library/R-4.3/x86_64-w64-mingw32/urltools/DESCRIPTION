@@ -3,16 +3,9 @@ Type: Package
 Title: Vectorised Tools for URL Handling and Parsing
 Version: 1.7.3
 Date: 2019-04-14
-Author: Os Keyes [aut, cre], Jay Jacobs [aut, cre], Drew Schmidt [aut],
-    Mark Greenaway [ctb], Bob Rudis [ctb], Alex Pinto [ctb], Maryam Khezrzadeh [ctb], Peter Meilstrup [ctb],
-    Adam M. Costello [cph], Jeff Bezanson [cph], Peter Meilstrup [ctb], Xueyuan Jiang [ctb]
+Author: Os Keyes [aut, cre], Jay Jacobs [aut, cre], Drew Schmidt [aut], Mark Greenaway [ctb], Bob Rudis [ctb], Alex Pinto [ctb], Maryam Khezrzadeh [ctb], Peter Meilstrup [ctb], Adam M. Costello [cph], Jeff Bezanson [cph], Peter Meilstrup [ctb], Xueyuan Jiang [ctb]
 Maintainer: Os Keyes <ironholds@gmail.com>
-Description: A toolkit for all URL-handling needs, including encoding and decoding,
-    parsing, parameter extraction and modification. All functions are
-    designed to be both fast and entirely vectorised. It is intended to be
-    useful for people dealing with web-related datasets, such as server-side
-    logs, although may be useful for other situations involving large sets of
-    URLs.
+Description: A toolkit for all URL-handling needs, including encoding and decoding, parsing, parameter extraction and modification. All functions are designed to be both fast and entirely vectorised. It is intended to be useful for people dealing with web-related datasets, such as server-side logs, although may be useful for other situations involving large sets of URLs.
 License: MIT + file LICENSE
 LazyData: TRUE
 LinkingTo: Rcpp
@@ -28,5 +21,12 @@ NeedsCompilation: yes
 Packaged: 2019-04-14 22:25:08 UTC; ironholds
 Repository: CRAN
 Date/Publication: 2019-04-14 23:02:47 UTC
-Built: R 4.3.2; x86_64-w64-mingw32; 2023-12-31 01:54:49 UTC; windows
+Built: R 4.3.3; x86_64-w64-mingw32; 2024-08-04 01:34:00 UTC; windows
 Archs: x64
+RemoteType: standard
+RemotePkgRef: urltools
+RemoteRef: urltools
+RemoteRepos: https://archive.linux.duke.edu/cran
+RemoteReposName: CRAN
+RemotePkgPlatform: x86_64-w64-mingw32
+RemoteSha: 1.7.3

@@ -6,9 +6,7 @@ Date: 2018-02-05
 Author: Pierre Legendre
 Maintainer: Jari Oksanen <jari.oksanen@oulu.fi>
 Depends: R (>= 2.14.0)
-Description: Computes model II simple linear regression using ordinary
- least squares (OLS), major axis (MA), standard major axis (SMA), and
- ranged major axis (RMA).
+Description: Computes model II simple linear regression using ordinary least squares (OLS), major axis (MA), standard major axis (SMA), and ranged major axis (RMA).
 License: GPL-2
 LazyLoad: yes
 NeedsCompilation: no
@@ -16,3 +14,10 @@ Packaged: 2018-02-05 07:48:12 UTC; jarioksa
 Repository: CRAN
 Date/Publication: 2018-02-05 22:59:16 UTC
 Built: R 4.3.1; ; 2023-10-20 00:57:11 UTC; windows
+RemoteType: standard
+RemotePkgRef: lmodel2
+RemoteRef: lmodel2
+RemoteRepos: https://archive.linux.duke.edu/cran
+RemoteReposName: CRAN
+RemotePkgPlatform: x86_64-w64-mingw32
+RemoteSha: 1.7-3

@@ -6,12 +6,9 @@ Date: 2022-11-13
 Author: Jens Oehlschlägel [aut, cre], Brian Ripley [ctb]
 Maintainer: Jens Oehlschlägel <Jens.Oehlschlaegel@truecluster.com>
 Depends: R (>= 2.9.2)
-Suggests: testthat (>= 0.11.0), roxygen2, knitr, rmarkdown,
-        microbenchmark, bit64 (>= 4.0.0), ff (>= 4.0.0)
-Description: Provided are classes for boolean and skewed boolean vectors,
-    fast boolean methods, fast unique and non-unique integer sorting,
-    fast set operations on sorted and unsorted sets of integers, and
-    foundations for ff (range index, compression, chunked processing).
+Suggests: testthat (>= 0.11.0), roxygen2, knitr, rmarkdown, microbenchmark,
+    bit64 (>= 4.0.0), ff (>= 4.0.0)
+Description: Provided are classes for boolean and skewed boolean vectors, fast boolean methods, fast unique and non-unique integer sorting, fast set operations on sorted and unsorted sets of integers, and foundations for ff (range index, compression, chunked processing).
 License: GPL-2 | GPL-3
 LazyLoad: yes
 ByteCompile: yes
@@ -23,5 +20,12 @@ NeedsCompilation: yes
 Packaged: 2022-11-13 21:22:09 UTC; jo
 Repository: CRAN
 Date/Publication: 2022-11-15 21:20:16 UTC
-Built: R 4.3.2; x86_64-w64-mingw32; 2023-12-31 01:16:17 UTC; windows
+Built: R 4.3.3; x86_64-w64-mingw32; 2024-08-04 00:31:52 UTC; windows
 Archs: x64
+RemoteType: standard
+RemotePkgRef: bit
+RemoteRef: bit
+RemoteRepos: https://archive.linux.duke.edu/cran
+RemoteReposName: CRAN
+RemotePkgPlatform: x86_64-w64-mingw32
+RemoteSha: 4.0.5

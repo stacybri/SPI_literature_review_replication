@@ -1,17 +1,8 @@
 Package: confintr
 Title: Confidence Intervals
 Version: 1.0.2
-Authors@R: 
-    person("Michael", "Mayer", , "mayermichael79@gmail.com", role = c("aut", "cre"))
-Description: Calculates classic and/or bootstrap confidence intervals for
-    many parameters such as the population mean, variance, interquartile
-    range (IQR), median absolute deviation (MAD), skewness, kurtosis,
-    Cramer's V, odds ratio, R-squared, quantiles (incl. median),
-    proportions, different types of correlation measures, difference in
-    means, quantiles and medians. Many of the classic confidence intervals
-    are described in Smithson, M. (2003, ISBN: 978-0761924999). Bootstrap
-    confidence intervals are calculated with the R package 'boot'. Both
-    one- and two-sided intervals are supported.
+Authors@R: person("Michael", "Mayer", , "mayermichael79@gmail.com", role = c("aut", "cre"))
+Description: Calculates classic and/or bootstrap confidence intervals for many parameters such as the population mean, variance, interquartile range (IQR), median absolute deviation (MAD), skewness, kurtosis, Cramer's V, odds ratio, R-squared, quantiles (incl. median), proportions, different types of correlation measures, difference in means, quantiles and medians. Many of the classic confidence intervals are described in Smithson, M. (2003, ISBN: 978-0761924999). Bootstrap confidence intervals are calculated with the R package 'boot'. Both one- and two-sided intervals are supported.
 License: GPL (>= 2)
 Depends: R (>= 3.1.0)
 Encoding: UTF-8
@@ -28,4 +19,11 @@ Author: Michael Mayer [aut, cre]
 Maintainer: Michael Mayer <mayermichael79@gmail.com>
 Repository: CRAN
 Date/Publication: 2023-06-04 18:40:02 UTC
-Built: R 4.3.2; ; 2023-12-31 01:21:00 UTC; windows
+Built: R 4.3.3; ; 2024-08-04 00:35:56 UTC; windows
+RemoteType: standard
+RemotePkgRef: confintr
+RemoteRef: confintr
+RemoteRepos: https://archive.linux.duke.edu/cran
+RemoteReposName: CRAN
+RemotePkgPlatform: x86_64-w64-mingw32
+RemoteSha: 1.0.2
