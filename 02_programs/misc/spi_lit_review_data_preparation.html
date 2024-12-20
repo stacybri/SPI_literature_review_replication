@@ -11,6 +11,7 @@
 
 <meta name="author" content="Brian Stacy" />
 
+<meta name="date" content="2024-12-20" />
 
 <title>Gathering Data for the SPI Literature Review Paper</title>
 
@@ -352,7 +353,7 @@ display: none;
 <h1 class="title toc-ignore">Gathering Data for the SPI Literature
 Review Paper</h1>
 <h4 class="author">Brian Stacy</h4>
-<h4 class="date">8/16/2023</h4>
+<h4 class="date">12/20/2024</h4>
 
 </div>
 
@@ -389,7 +390,7 @@ welfare_df &lt;- pip_df %&gt;%
 pip_df &lt;- pip_df %&gt;%
   filter(survey_coverage %in% c(&#39;national&#39;)) %&gt;% #keep just the national surveys
   filter(reporting_level %in% c(&#39;national&#39;)) %&gt;% #keep just the national surveys
-  filter(between(year, 1982, 2022)) %&gt;% #keep data from 1982 to 2022
+  filter(between(year, 1982, end_date)) %&gt;% #keep data from 1982 to end_date
   #aggregate totals by country
   rename(iso3c=country_code) %&gt;%
   group_by(iso3c) %&gt;%
@@ -433,6 +434,8 @@ SPI_end_date &lt;- spi_index_df %&gt;%
   filter(date==end_date) %&gt;%
   filter(!is.na(SPI.INDEX) &amp; !is.na(weights)) %&gt;%
   mutate(ISO_A3_EH=iso3c) 
+
+iso_codes &lt;- read_csv(paste0(raw_dir, &quot;/metadata/iso_codes.csv&quot;)) 
 
 
 SPI &lt;- spi_index_df
@@ -589,15 +592,15 @@ ff_sub_df &lt;- read_csv(paste0(raw_dir, &quot;/Subsidies.csv&quot;)) %&gt;%
   
 
 ghg_df &lt;- wb_data(country=&quot;all&quot;, 
-              indicator=c(&#39;EN.ATM.GHGT.KT.CE&#39;),
+              indicator=c(&#39;EN.GHG.ALL.MT.CE.AR5&#39;),
               start_date=start_date,
               end_date=end_date,
               ) %&gt;% # fill forward 
   group_by(country) %&gt;%
   right_join(spi_df_empty) %&gt;%
-  fill(c(&#39;EN.ATM.GHGT.KT.CE&#39;), .direction = &#39;downup&#39;) %&gt;%
+  fill(c(&#39;EN.GHG.ALL.MT.CE.AR5&#39;), .direction = &#39;downup&#39;) %&gt;%
   filter(date==end_date) %&gt;%
-  select(iso3c,  EN.ATM.GHGT.KT.CE)
+  select(iso3c,  EN.GHG.ALL.MT.CE.AR5)
 
 protected_df &lt;- wb_data(country=&quot;all&quot;, 
               indicator=c(&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;),
@@ -658,6 +661,12 @@ hdi_df &lt;- read_csv(paste0(raw_dir, &#39;HDR21-22_Composite_indices_complete_t
   select(iso3c, hdi_value)
               
 #Yale’s Environmental Performance Index (https://epi.yale.edu/).  Downloaded Aug 24, 2023
+epi_2024_df &lt;- read_csv(paste0(raw_dir, &#39;epi2024results.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.new) %&gt;%
+  mutate(date=2024) %&gt;%
+  select(iso3c, date, env_perform_index)
+
 epi_2022_df &lt;- read_csv(paste0(raw_dir, &#39;epi2022results05302022.csv&#39;)) %&gt;%
   rename(iso3c=iso,
          env_perform_index=EPI.new) %&gt;%
@@ -676,26 +685,60 @@ epi_2018_df &lt;- read_csv(paste0(raw_dir, &#39;epi2018results.csv&#39;)) %&gt;%
   mutate(date=2018) %&gt;%
   select(iso3c, date, env_perform_index)
 
-epi_df &lt;- bind_rows(epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
+epi_df &lt;- bind_rows(epi_2024_df,epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
   group_by(iso3c) %&gt;%
   fill(c(&#39;env_perform_index&#39;), .direction = &#39;downup&#39;) %&gt;%
-  filter(date&gt;=2022) %&gt;% #take 5 latest years
+  filter(date&gt;=2023) %&gt;% #take 5 latest years
   summarise(across(c(&#39;env_perform_index&#39;), mean, na.rm=TRUE)) %&gt;%
   select(iso3c, env_perform_index)
 
-##Harvard’s Economic complexity index (https://atlas.cid.harvard.edu/rankings).  Downloaded Aug 24, 2023
-ec_complex_df &lt;- read_csv(paste0(raw_dir, &quot;Country Complexity Rankings 1995 - 2021.csv&quot;)) %&gt;%
-  select(iso3c, `ECI 1995`:`ECI 2021`) %&gt;%
-  pivot_longer(
-    cols=c(&#39;ECI 1995&#39;:&#39;ECI 2021&#39;),
-    names_to=&#39;index&#39;,
-    values_to=&#39;eci_value&#39;
-  ) %&gt;%
-  mutate(
-    date=as.numeric(str_sub(index,5,8))
-  ) %&gt;%
+# FAO food security index and prevalence of undernourishment (https://www.fao.org/faostat/en/#data/FS)
+fao_stats_df &lt;- read_csv(paste0(raw_dir, &quot;FAOSTAT_data_en_9-22-2023.csv&quot;)) %&gt;%
+    mutate(geoAreaCode=as.numeric(`Area Code (M49)`)) %&gt;% #convert to numeric
+    left_join(
+        read_csv(paste0(raw_dir, &quot;/metadata/iso_codes.csv&quot;) ) %&gt;%
+            select(geoAreaCode, iso3c)
+    ) %&gt;%
+    filter(Item %in% c(
+        &quot;Prevalence of severe food insecurity in the total population (percent) (3-year average)&quot;,
+        &quot;Prevalence of undernourishment (percent) (3-year average)&quot;
+    )) %&gt;%
+    mutate(date=as.numeric(str_sub(`Year Code`,1,4))+1)  %&gt;% #add 1 because it is the midpoint of 3 year avg
+    select(iso3c, date, Item, Value) %&gt;% #keep only relevant columns
+    filter(!is.na(iso3c)) %&gt;%
+    #pivot wider
+    pivot_wider(
+        names_from=Item,
+        values_from=Value,
+    ) %&gt;%
+    #shorten names
+    rename(
+        undernourish=`Prevalence of undernourishment (percent) (3-year average)`,
+        severe_food_insecurity=`Prevalence of severe food insecurity in the total population (percent) (3-year average)`
+    ) %&gt;%
+    #keep only numeric values in Value using str_remove_all
+    mutate(
+        undernourish=as.numeric(str_remove_all(undernourish, &quot;[^0-9.]&quot;)),
+        severe_food_insecurity=as.numeric(str_remove_all(severe_food_insecurity, &quot;[^0-9.]&quot;))
+    ) %&gt;%
   group_by(iso3c) %&gt;%
-  fill(c(&#39;eci_value&#39;), .direction = &#39;downup&#39;) %&gt;%
+  fill(c(&#39;undernourish&#39;,&#39;severe_food_insecurity&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=end_date) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;undernourish&#39;,&#39;severe_food_insecurity&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, undernourish, severe_food_insecurity) 
+
+#prosperity data
+
+
+
+
+##Harvard’s Economic complexity index (https://atlas.cid.harvard.edu/rankings).  Downloaded Aug 24, 2023
+ec_complex_df &lt;- read_dta(paste0(raw_dir, &quot;Country Complexity Rankings 1995 - 2022.dta&quot;)) %&gt;%
+  rename(geoAreaCode=country_id,
+         eci_value=hs_eci,
+         date=year) %&gt;%
+  left_join(iso_codes) %&gt;%
+  group_by(iso3c) %&gt;%
   filter(date&gt;=2021) %&gt;% #take 5 latest years
   summarise(across(c(&#39;eci_value&#39;), mean, na.rm=TRUE)) %&gt;%
   select(iso3c, eci_value)
@@ -787,19 +830,42 @@ correlates_df_end_date &lt;- correlates_df %&gt;%
   left_join(epi_df) %&gt;%
   left_join(ec_complex_df) %&gt;%
   left_join(press_free_df) %&gt;%
-  left_join(bli_df) %&gt;%
+  left_join(bli_df) %&gt;%       left_join(fao_stats_df) %&gt;%
   filter(region!=&quot;Aggregates&quot;) %&gt;%
-  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.ATM.GHGT.KT.CE&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;))
+  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.GHG.ALL.MT.CE.AR5&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;,                   &#39;undernourish&#39;, &#39;severe_food_insecurity&#39;))
 
 
 sdgs &lt;- c(&#39;SI.POV.DDAY&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,
           &#39;SH.H2O.SMDW.ZS&#39;,&#39;EG.ELC.ACCS.ZS&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;NV.IND.MANF.ZS&#39;,&#39;SI.POV.GINI&#39;,
-          &#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.ATM.GHGT.KT.CE&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;
+          &#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.GHG.ALL.MT.CE.AR5&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;
           ,&#39;GE.EST&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;)
 
 sdg_names &lt;- c(&#39;SDG 1: Extreme Poverty&#39;,&#39;SDG 2: Undernourishment&#39;,&#39;SDG 3: Maternal Mortality&#39;,&#39;SDG 4: Learning Poverty&#39;,&#39;SDG 5: Women, Business, Law Index&#39;,
           &#39;SDG 6: Safely Managed Water&#39;,&#39;SDG 7: Access to Electricity&#39;,&#39;SDG 8: GDP per capita (2015 constant $)&#39;,&#39;SDG 9: Manufacturing value added (% of GDP)&#39;,&#39;SDG 10: Gini Index&#39;,
           &#39;SDG 11: Population in Slums&#39;,&#39;SDG 12: Fossil Fuel Subsidies (% of GDP)&#39;,&#39;SDG 13: Greenhouse Gas Emissions&#39;,&#39;SDG 14: Marine protected areas&#39;,&#39;SDG 15: Terrestrial Protected Areas&#39;,&#39;SDG 16: Government Effectiveness&#39;,&#39;SDG 17: Total Debt Service&#39;, &#39;SDR: SDG Index Overall Score&#39;)</code></pre>
+<p>Markdown table with variable and description in correlates_df |
+Variable | Description | | – | – | | SI.POV.DDAY | Proportion of
+population living below the national poverty line | | SI.POV.GINI | Gini
+index | | GE.EST | Government Effectiveness | | NY.GDP.PCAP.KD | GDP per
+capita (2015 constant $) | | HD.HCI.OVRL | Human Capital Index | |
+SN.ITK.DEFC.ZS | Prevalence of undernourishment | | SH.STA.MMRT |
+Maternal Mortality Ratio | | SE.LPV.PRIM | Learning Poverty | |
+SG.LAW.IND | Women, Business, Law Index | | SH.H2O.SMDW.ZS | Safely
+Managed Water | | EG.ELC.ACCS.ZS | Access to Electricity | |
+NV.IND.MANF.ZS | Manufacturing value added (% of GDP) | |
+EN.POP.SLUM.UR.ZS | Population in Slums | | subsidies | Fossil Fuel
+Subsidies (% of GDP) | | EN.GHG.ALL.MT.CE.AR5 | Greenhouse Gas Emissions
+| | ER.MRN.PTMR.ZS | Marine protected areas | | ER.LND.PTLD.ZS |
+Terrestrial Protected Areas | | DT.TDS.DECT.EX.ZS | Total Debt Service |
+| sdg_index_score | SDG Index Overall Score | | hdi_value | Human
+Development Index | | env_perform_index | Environmental Performance
+Index | | eci_value | Economic Complexity Index | | press_free_score |
+Press Freedom Index | | better_life_index | OECD Better Life Index |</p>
+<p>Markdown table with variable and description in comparison_df |
+Variable | Description | | – | – | | SPI.INDEX | Statistical Performance
+Indicators Overall Score | | SCI | Statistical Capacity Indicator Index
+| | ODIN_score | Open Data Index | | odb | Open Data Barometer | | gdb |
+Global Data Barometer |</p>
 <div id="do-the-same-thing-but-instead-of-latest-year-of-data-available-take-the-average-of-5-preceding-years." class="section level3">
 <h3>Do the same thing, but instead of latest year of data available take
 the average of 5 preceding years.</h3>
@@ -961,16 +1027,16 @@ ff_sub_df &lt;- read_csv(paste0(raw_dir, &quot;/Subsidies.csv&quot;)) %&gt;%
   
 
 ghg_df &lt;- wb_data(country=&quot;all&quot;, 
-              indicator=c(&#39;EN.ATM.GHGT.KT.CE&#39;),
+              indicator=c(&#39;EN.GHG.ALL.MT.CE.AR5&#39;),
               start_date=start_date,
               end_date=end_date,
               ) %&gt;% # fill forward 
   group_by(iso3c) %&gt;%
   right_join(spi_df_empty) %&gt;%
-  fill(c(&#39;EN.ATM.GHGT.KT.CE&#39;), .direction = &#39;downup&#39;) %&gt;%
+  fill(c(&#39;EN.GHG.ALL.MT.CE.AR5&#39;), .direction = &#39;downup&#39;) %&gt;%
   filter(date&gt;=end_date-4) %&gt;% #take 5 latest years
-  summarise(across(c(&#39;EN.ATM.GHGT.KT.CE&#39;), mean, na.rm=TRUE)) %&gt;%
-  select(iso3c,  EN.ATM.GHGT.KT.CE)
+  summarise(across(c(&#39;EN.GHG.ALL.MT.CE.AR5&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c,  EN.GHG.ALL.MT.CE.AR5)
 
 protected_df &lt;- wb_data(country=&quot;all&quot;, 
               indicator=c(&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;),
@@ -1032,6 +1098,12 @@ hdi_df &lt;- read_csv(paste0(raw_dir, &#39;HDR21-22_Composite_indices_complete_t
   select(iso3c, hdi_value)
 
 #Yale’s Environmental Performance Index (https://epi.yale.edu/).  Downloaded Aug 24, 2023
+epi_2024_df &lt;- read_csv(paste0(raw_dir, &#39;epi2024results.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.new) %&gt;%
+  mutate(date=2024) %&gt;%
+  select(iso3c, date, env_perform_index)
+
 epi_2022_df &lt;- read_csv(paste0(raw_dir, &#39;epi2022results05302022.csv&#39;)) %&gt;%
   rename(iso3c=iso,
          env_perform_index=EPI.new) %&gt;%
@@ -1050,26 +1122,55 @@ epi_2018_df &lt;- read_csv(paste0(raw_dir, &#39;epi2018results.csv&#39;)) %&gt;%
   mutate(date=2018) %&gt;%
   select(iso3c, date, env_perform_index)
 
-epi_df &lt;- bind_rows(epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
+epi_df &lt;- bind_rows(epi_2024_df,epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
   group_by(iso3c) %&gt;%
   fill(c(&#39;env_perform_index&#39;), .direction = &#39;downup&#39;) %&gt;%
-  filter(date&gt;=2022-4) %&gt;% #take 5 latest years
+  filter(date&gt;=2024-4) %&gt;% #take 5 latest years
   summarise(across(c(&#39;env_perform_index&#39;), mean, na.rm=TRUE)) %&gt;%
   select(iso3c, env_perform_index)
 
-##Harvard’s Economic complexity index (https://atlas.cid.harvard.edu/rankings).  Downloaded Aug 24, 2023
-ec_complex_df &lt;- read_csv(paste0(raw_dir, &quot;Country Complexity Rankings 1995 - 2021.csv&quot;)) %&gt;%
-  select(iso3c, `ECI 1995`:`ECI 2021`) %&gt;%
-  pivot_longer(
-    cols=c(&#39;ECI 1995&#39;:&#39;ECI 2021&#39;),
-    names_to=&#39;index&#39;,
-    values_to=&#39;eci_value&#39;
-  ) %&gt;%
-  mutate(
-    date=as.numeric(str_sub(index,5,8))
-  ) %&gt;%
+# FAO food security index and prevalence of undernourishment (https://www.fao.org/faostat/en/#data/FS)
+fao_stats_df &lt;- read_csv(paste0(raw_dir, &quot;FAOSTAT_data_en_9-22-2023.csv&quot;)) %&gt;%
+    mutate(geoAreaCode=as.numeric(`Area Code (M49)`)) %&gt;% #convert to numeric
+    left_join(
+        read_csv(paste0(raw_dir, &quot;/metadata/iso_codes.csv&quot;) ) %&gt;%
+            select(geoAreaCode, iso3c)
+    ) %&gt;%
+    filter(Item %in% c(
+        &quot;Prevalence of severe food insecurity in the total population (percent) (3-year average)&quot;,
+        &quot;Prevalence of undernourishment (percent) (3-year average)&quot;
+    )) %&gt;%
+    mutate(date=as.numeric(str_sub(`Year Code`,1,4))+1)  %&gt;% #add 1 because it is the midpoint of 3 year avg
+    select(iso3c, date, Item, Value) %&gt;% #keep only relevant columns
+    filter(!is.na(iso3c)) %&gt;%
+    #pivot wider
+    pivot_wider(
+        names_from=Item,
+        values_from=Value,
+    ) %&gt;%
+    #shorten names
+    rename(
+        undernourish=`Prevalence of undernourishment (percent) (3-year average)`,
+        severe_food_insecurity=`Prevalence of severe food insecurity in the total population (percent) (3-year average)`
+    ) %&gt;%
+    #keep only numeric values in Value using str_remove_all
+    mutate(
+        undernourish=as.numeric(str_remove_all(undernourish, &quot;[^0-9.]&quot;)),
+        severe_food_insecurity=as.numeric(str_remove_all(severe_food_insecurity, &quot;[^0-9.]&quot;))
+    ) %&gt;%
   group_by(iso3c) %&gt;%
-  fill(c(&#39;eci_value&#39;), .direction = &#39;downup&#39;) %&gt;%
+  fill(c(&#39;undernourish&#39;,&#39;severe_food_insecurity&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2023-4) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;undernourish&#39;,&#39;severe_food_insecurity&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, undernourish, severe_food_insecurity) 
+
+##Harvard’s Economic complexity index (https://atlas.cid.harvard.edu/rankings).  Downloaded Aug 24, 2023
+ec_complex_df &lt;- read_dta(paste0(raw_dir, &quot;Country Complexity Rankings 1995 - 2022.dta&quot;)) %&gt;%
+  rename(geoAreaCode=country_id,
+         eci_value=hs_eci,
+         date=year) %&gt;%
+  left_join(iso_codes) %&gt;%
+  group_by(iso3c) %&gt;%
   filter(date&gt;=2021-4) %&gt;% #take 5 latest years
   summarise(across(c(&#39;eci_value&#39;), mean, na.rm=TRUE)) %&gt;%
   select(iso3c, eci_value)
@@ -1161,9 +1262,9 @@ correlates_df_avg &lt;- correlates_df %&gt;%
   left_join(epi_df) %&gt;%
   left_join(ec_complex_df) %&gt;%
   left_join(press_free_df) %&gt;%
-  left_join(bli_df) %&gt;%
+  left_join(bli_df) %&gt;%       left_join(fao_stats_df) %&gt;%
   filter(region!=&quot;Aggregates&quot;) %&gt;%
-  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.ATM.GHGT.KT.CE&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;))</code></pre>
+  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.GHG.ALL.MT.CE.AR5&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;,                   &#39;undernourish&#39;, &#39;severe_food_insecurity&#39;))</code></pre>
 </div>
 <div id="now-do-a-three-year-average." class="section level3">
 <h3>Now do a three year average.</h3>
@@ -1325,16 +1426,16 @@ ff_sub_df &lt;- read_csv(paste0(raw_dir, &quot;/Subsidies.csv&quot;)) %&gt;%
   
 
 ghg_df &lt;- wb_data(country=&quot;all&quot;, 
-              indicator=c(&#39;EN.ATM.GHGT.KT.CE&#39;),
+              indicator=c(&#39;EN.GHG.ALL.MT.CE.AR5&#39;),
               start_date=start_date,
               end_date=end_date,
               ) %&gt;% # fill forward 
   group_by(iso3c) %&gt;%
   right_join(spi_df_empty) %&gt;%
-  fill(c(&#39;EN.ATM.GHGT.KT.CE&#39;), .direction = &#39;downup&#39;) %&gt;%
+  fill(c(&#39;EN.GHG.ALL.MT.CE.AR5&#39;), .direction = &#39;downup&#39;) %&gt;%
   filter(date&gt;=end_date-2) %&gt;% #take 5 latest years
-  summarise(across(c(&#39;EN.ATM.GHGT.KT.CE&#39;), mean, na.rm=TRUE)) %&gt;%
-  select(iso3c,  EN.ATM.GHGT.KT.CE)
+  summarise(across(c(&#39;EN.GHG.ALL.MT.CE.AR5&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c,  EN.GHG.ALL.MT.CE.AR5)
 
 protected_df &lt;- wb_data(country=&quot;all&quot;, 
               indicator=c(&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;),
@@ -1394,6 +1495,12 @@ hdi_df &lt;- read_csv(paste0(raw_dir, &#39;HDR21-22_Composite_indices_complete_t
   select(iso3c, hdi_value)
 
 #Yale’s Environmental Performance Index (https://epi.yale.edu/).  Downloaded Aug 24, 2023
+epi_2024_df &lt;- read_csv(paste0(raw_dir, &#39;epi2024results.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.new) %&gt;%
+  mutate(date=2024) %&gt;%
+  select(iso3c, date, env_perform_index)
+
 epi_2022_df &lt;- read_csv(paste0(raw_dir, &#39;epi2022results05302022.csv&#39;)) %&gt;%
   rename(iso3c=iso,
          env_perform_index=EPI.new) %&gt;%
@@ -1412,26 +1519,55 @@ epi_2018_df &lt;- read_csv(paste0(raw_dir, &#39;epi2018results.csv&#39;)) %&gt;%
   mutate(date=2018) %&gt;%
   select(iso3c, date, env_perform_index)
 
-epi_df &lt;- bind_rows(epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
+epi_df &lt;- bind_rows(epi_2024_df,epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
   group_by(iso3c) %&gt;%
   fill(c(&#39;env_perform_index&#39;), .direction = &#39;downup&#39;) %&gt;%
-  filter(date&gt;=2022-2) %&gt;% #take 5 latest years
+  filter(date&gt;=2024-2) %&gt;% #take 5 latest years
   summarise(across(c(&#39;env_perform_index&#39;), mean, na.rm=TRUE)) %&gt;%
   select(iso3c, env_perform_index)
 
-##Harvard’s Economic complexity index (https://atlas.cid.harvard.edu/rankings).  Downloaded Aug 24, 2023
-ec_complex_df &lt;- read_csv(paste0(raw_dir, &quot;Country Complexity Rankings 1995 - 2021.csv&quot;)) %&gt;%
-  select(iso3c, `ECI 1995`:`ECI 2021`) %&gt;%
-  pivot_longer(
-    cols=c(&#39;ECI 1995&#39;:&#39;ECI 2021&#39;),
-    names_to=&#39;index&#39;,
-    values_to=&#39;eci_value&#39;
-  ) %&gt;%
-  mutate(
-    date=as.numeric(str_sub(index,5,8))
-  ) %&gt;%
+# FAO food security index and prevalence of undernourishment (https://www.fao.org/faostat/en/#data/FS)
+fao_stats_df &lt;- read_csv(paste0(raw_dir, &quot;FAOSTAT_data_en_9-22-2023.csv&quot;)) %&gt;%
+    mutate(geoAreaCode=as.numeric(`Area Code (M49)`)) %&gt;% #convert to numeric
+    left_join(
+        read_csv(paste0(raw_dir, &quot;/metadata/iso_codes.csv&quot;) ) %&gt;%
+            select(geoAreaCode, iso3c)
+    ) %&gt;%
+    filter(Item %in% c(
+        &quot;Prevalence of severe food insecurity in the total population (percent) (3-year average)&quot;,
+        &quot;Prevalence of undernourishment (percent) (3-year average)&quot;
+    )) %&gt;%
+    mutate(date=as.numeric(str_sub(`Year Code`,1,4))+1)  %&gt;% #add 1 because it is the midpoint of 3 year avg
+    select(iso3c, date, Item, Value) %&gt;% #keep only relevant columns
+    filter(!is.na(iso3c)) %&gt;%
+    #pivot wider
+    pivot_wider(
+        names_from=Item,
+        values_from=Value,
+    ) %&gt;%
+    #shorten names
+    rename(
+        undernourish=`Prevalence of undernourishment (percent) (3-year average)`,
+        severe_food_insecurity=`Prevalence of severe food insecurity in the total population (percent) (3-year average)`
+    ) %&gt;%
+    #keep only numeric values in Value using str_remove_all
+    mutate(
+        undernourish=as.numeric(str_remove_all(undernourish, &quot;[^0-9.]&quot;)),
+        severe_food_insecurity=as.numeric(str_remove_all(severe_food_insecurity, &quot;[^0-9.]&quot;))
+    ) %&gt;%
   group_by(iso3c) %&gt;%
-  fill(c(&#39;eci_value&#39;), .direction = &#39;downup&#39;) %&gt;%
+  fill(c(&#39;undernourish&#39;,&#39;severe_food_insecurity&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2023-2) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;undernourish&#39;,&#39;severe_food_insecurity&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, undernourish, severe_food_insecurity) 
+
+##Harvard’s Economic complexity index (https://atlas.cid.harvard.edu/rankings).  Downloaded Aug 24, 2023
+ec_complex_df &lt;- read_dta(paste0(raw_dir, &quot;Country Complexity Rankings 1995 - 2022.dta&quot;)) %&gt;%
+  rename(geoAreaCode=country_id,
+         eci_value=hs_eci,
+         date=year) %&gt;%
+  left_join(iso_codes) %&gt;%
+  group_by(iso3c) %&gt;%
   filter(date&gt;=2021-2) %&gt;% #take 5 latest years
   summarise(across(c(&#39;eci_value&#39;), mean, na.rm=TRUE)) %&gt;%
   select(iso3c, eci_value)
@@ -1524,9 +1660,9 @@ correlates_df_avg &lt;- correlates_df %&gt;%
   left_join(epi_df) %&gt;%
   left_join(ec_complex_df) %&gt;%
   left_join(press_free_df) %&gt;%
-  left_join(bli_df) %&gt;%
+  left_join(bli_df) %&gt;%       left_join(fao_stats_df) %&gt;%
   filter(region!=&quot;Aggregates&quot;) %&gt;%
-  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.ATM.GHGT.KT.CE&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;))</code></pre>
+  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.GHG.ALL.MT.CE.AR5&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;,                   &#39;undernourish&#39;, &#39;severe_food_insecurity&#39;))</code></pre>
 </div>
 <div id="two-year-average" class="section level3">
 <h3>Two year average</h3>
@@ -1688,16 +1824,16 @@ ff_sub_df &lt;- read_csv(paste0(raw_dir, &quot;/Subsidies.csv&quot;)) %&gt;%
   
 
 ghg_df &lt;- wb_data(country=&quot;all&quot;, 
-              indicator=c(&#39;EN.ATM.GHGT.KT.CE&#39;),
+              indicator=c(&#39;EN.GHG.ALL.MT.CE.AR5&#39;),
               start_date=start_date,
               end_date=end_date,
               ) %&gt;% # fill forward 
   group_by(iso3c) %&gt;%
   right_join(spi_df_empty) %&gt;%
-  fill(c(&#39;EN.ATM.GHGT.KT.CE&#39;), .direction = &#39;downup&#39;) %&gt;%
+  fill(c(&#39;EN.GHG.ALL.MT.CE.AR5&#39;), .direction = &#39;downup&#39;) %&gt;%
   filter(date&gt;=end_date-1) %&gt;% #take 5 latest years
-  summarise(across(c(&#39;EN.ATM.GHGT.KT.CE&#39;), mean, na.rm=TRUE)) %&gt;%
-  select(iso3c,  EN.ATM.GHGT.KT.CE)
+  summarise(across(c(&#39;EN.GHG.ALL.MT.CE.AR5&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c,  EN.GHG.ALL.MT.CE.AR5)
 
 protected_df &lt;- wb_data(country=&quot;all&quot;, 
               indicator=c(&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;),
@@ -1757,6 +1893,12 @@ hdi_df &lt;- read_csv(paste0(raw_dir, &#39;HDR21-22_Composite_indices_complete_t
   select(iso3c, hdi_value)
 
 #Yale’s Environmental Performance Index (https://epi.yale.edu/).  Downloaded Aug 24, 2023
+epi_2024_df &lt;- read_csv(paste0(raw_dir, &#39;epi2024results.csv&#39;)) %&gt;%
+  rename(iso3c=iso,
+         env_perform_index=EPI.new) %&gt;%
+  mutate(date=2024) %&gt;%
+  select(iso3c, date, env_perform_index)
+
 epi_2022_df &lt;- read_csv(paste0(raw_dir, &#39;epi2022results05302022.csv&#39;)) %&gt;%
   rename(iso3c=iso,
          env_perform_index=EPI.new) %&gt;%
@@ -1775,26 +1917,55 @@ epi_2018_df &lt;- read_csv(paste0(raw_dir, &#39;epi2018results.csv&#39;)) %&gt;%
   mutate(date=2018) %&gt;%
   select(iso3c, date, env_perform_index)
 
-epi_df &lt;- bind_rows(epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
+epi_df &lt;- bind_rows(epi_2024_df,epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
   group_by(iso3c) %&gt;%
   fill(c(&#39;env_perform_index&#39;), .direction = &#39;downup&#39;) %&gt;%
-  filter(date&gt;=2022-1) %&gt;% #take 5 latest years
+  filter(date&gt;=2024-1) %&gt;% #take 5 latest years
   summarise(across(c(&#39;env_perform_index&#39;), mean, na.rm=TRUE)) %&gt;%
   select(iso3c, env_perform_index)
 
-##Harvard’s Economic complexity index (https://atlas.cid.harvard.edu/rankings).  Downloaded Aug 24, 2023
-ec_complex_df &lt;- read_csv(paste0(raw_dir, &quot;Country Complexity Rankings 1995 - 2021.csv&quot;)) %&gt;%
-  select(iso3c, `ECI 1995`:`ECI 2021`) %&gt;%
-  pivot_longer(
-    cols=c(&#39;ECI 1995&#39;:&#39;ECI 2021&#39;),
-    names_to=&#39;index&#39;,
-    values_to=&#39;eci_value&#39;
-  ) %&gt;%
-  mutate(
-    date=as.numeric(str_sub(index,5,8))
-  ) %&gt;%
+# FAO food security index and prevalence of undernourishment (https://www.fao.org/faostat/en/#data/FS)
+fao_stats_df &lt;- read_csv(paste0(raw_dir, &quot;FAOSTAT_data_en_9-22-2023.csv&quot;)) %&gt;%
+    mutate(geoAreaCode=as.numeric(`Area Code (M49)`)) %&gt;% #convert to numeric
+    left_join(
+        read_csv(paste0(raw_dir, &quot;/metadata/iso_codes.csv&quot;) ) %&gt;%
+            select(geoAreaCode, iso3c)
+    ) %&gt;%
+    filter(Item %in% c(
+        &quot;Prevalence of severe food insecurity in the total population (percent) (3-year average)&quot;,
+        &quot;Prevalence of undernourishment (percent) (3-year average)&quot;
+    )) %&gt;%
+    mutate(date=as.numeric(str_sub(`Year Code`,1,4))+1)  %&gt;% #add 1 because it is the midpoint of 3 year avg
+    select(iso3c, date, Item, Value) %&gt;% #keep only relevant columns
+    filter(!is.na(iso3c)) %&gt;%
+    #pivot wider
+    pivot_wider(
+        names_from=Item,
+        values_from=Value,
+    ) %&gt;%
+    #shorten names
+    rename(
+        undernourish=`Prevalence of undernourishment (percent) (3-year average)`,
+        severe_food_insecurity=`Prevalence of severe food insecurity in the total population (percent) (3-year average)`
+    ) %&gt;%
+    #keep only numeric values in Value using str_remove_all
+    mutate(
+        undernourish=as.numeric(str_remove_all(undernourish, &quot;[^0-9.]&quot;)),
+        severe_food_insecurity=as.numeric(str_remove_all(severe_food_insecurity, &quot;[^0-9.]&quot;))
+    ) %&gt;%
   group_by(iso3c) %&gt;%
-  fill(c(&#39;eci_value&#39;), .direction = &#39;downup&#39;) %&gt;%
+  fill(c(&#39;undernourish&#39;,&#39;severe_food_insecurity&#39;), .direction = &#39;downup&#39;) %&gt;%
+  filter(date&gt;=2022-1) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;undernourish&#39;,&#39;severe_food_insecurity&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, undernourish, severe_food_insecurity) 
+
+##Harvard’s Economic complexity index (https://atlas.cid.harvard.edu/rankings).  Downloaded Aug 24, 2023
+ec_complex_df &lt;- read_dta(paste0(raw_dir, &quot;Country Complexity Rankings 1995 - 2022.dta&quot;)) %&gt;%
+  rename(geoAreaCode=country_id,
+         eci_value=hs_eci,
+         date=year) %&gt;%
+  left_join(iso_codes) %&gt;%
+  group_by(iso3c) %&gt;%
   filter(date&gt;=2021-1) %&gt;% #take 5 latest years
   summarise(across(c(&#39;eci_value&#39;), mean, na.rm=TRUE)) %&gt;%
   select(iso3c, eci_value)
@@ -1886,13 +2057,114 @@ correlates_df_avg &lt;- correlates_df %&gt;%
   left_join(epi_df) %&gt;%
   left_join(ec_complex_df) %&gt;%
   left_join(press_free_df) %&gt;%
-  left_join(bli_df) %&gt;%
+  left_join(bli_df) %&gt;%       left_join(fao_stats_df) %&gt;%
   filter(region!=&quot;Aggregates&quot;) %&gt;%
-  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.ATM.GHGT.KT.CE&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;))</code></pre>
+  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.GHG.ALL.MT.CE.AR5&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;,                   &#39;undernourish&#39;, &#39;severe_food_insecurity&#39;))</code></pre>
 </div>
 </div>
 <div id="regression-predictors" class="section level2">
 <h2>Regression Predictors</h2>
+<p>Create a markdown with the descriptions of the variables in people
+friendly format</p>
+<table>
+<colgroup>
+<col width="43%" />
+<col width="56%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Short Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SPI.INDEX</td>
+<td>Statistical Performance Indicator (SPI) overall score</td>
+</tr>
+<tr class="even">
+<td>SCI</td>
+<td>Statistical Capacity Indicator (SCI) overall score</td>
+</tr>
+<tr class="odd">
+<td>ODIN</td>
+<td>Open Data Index (ODIN) overall score</td>
+</tr>
+<tr class="even">
+<td>ODB</td>
+<td>Open Data Barometer (ODB) overall score</td>
+</tr>
+<tr class="odd">
+<td>GDB</td>
+<td>Global Data Barometer (GDB) overall score</td>
+</tr>
+<tr class="even">
+<td>IIAG</td>
+<td>Ibrahim Index of African Governance (IIAG) overall score</td>
+</tr>
+<tr class="odd">
+<td>NY.GDP.PCAP.KD</td>
+<td>GDP per capita (constant 2015 US$)</td>
+</tr>
+<tr class="even">
+<td>NV.IND.MANF.ZS</td>
+<td>Manufacturing, value added (% of GDP)</td>
+</tr>
+<tr class="odd">
+<td>NV.AGR.TOTL.ZS</td>
+<td>Agriculture, forestry, and fishing, value added (% of GDP)</td>
+</tr>
+<tr class="even">
+<td>NE.TRD.GNFS.ZS</td>
+<td>Trade (% of GDP)</td>
+</tr>
+<tr class="odd">
+<td>HD.HCI.OVRL</td>
+<td>Human Capital Index (HCI) overall score</td>
+</tr>
+<tr class="even">
+<td>SE.PRM.ENRR</td>
+<td>School enrollment, primary (% gross)</td>
+</tr>
+<tr class="odd">
+<td>BN.CAB.XOKA.GD.ZS</td>
+<td>Current account balance (% of GDP)</td>
+</tr>
+<tr class="even">
+<td>CC.EST</td>
+<td>Control of Corruption</td>
+</tr>
+<tr class="odd">
+<td>GE.EST</td>
+<td>Government Effectiveness</td>
+</tr>
+<tr class="even">
+<td>PV.EST</td>
+<td>Political Stability and Absence of Violence</td>
+</tr>
+<tr class="odd">
+<td>RQ.EST</td>
+<td>Regulatory Quality</td>
+</tr>
+<tr class="even">
+<td>RL.EST</td>
+<td>Rule of Law</td>
+</tr>
+<tr class="odd">
+<td>VA.EST</td>
+<td>Voice and Accountability</td>
+</tr>
+<tr class="even">
+<td>BX.KLT.DINV.WD.GD.ZS</td>
+<td>Foreign direct investment, net inflows (% of GDP)</td>
+</tr>
+<tr class="odd">
+<td>SI.POV.DDAY</td>
+<td>Poverty headcount ratio at $2.15 a day (2017 PPP) (% of
+population)</td>
+</tr>
+</tbody>
+</table>
 </div>
 
 

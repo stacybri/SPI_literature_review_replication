@@ -13,8 +13,7 @@ execute:
 dpi: 400
 knitr:
   opts_chunk:
-    fig.path="./figures/"
-    
+    fig.path: "./figures/"
 ---
 
 ```{r}
@@ -1325,8 +1324,7 @@ paste0('ODIN std dev: ', global_sd_odin)
 paste0('SPI std dev: ', global_sd_spi)
 ```
 
-```{r}
-```
+
 
 
 ## Figure 4. Absolute Value of Correlation between Key SDGs and Indexes
@@ -1337,7 +1335,7 @@ paste0('SPI std dev: ', global_sd_spi)
 
 sdgs <- c('SI.POV.DDAY','SN.ITK.DEFC.ZS','SH.STA.MMRT','SE.LPV.PRIM','SG.LAW.INDX',
           'SH.H2O.SMDW.ZS','EG.ELC.ACCS.ZS','NY.GDP.PCAP.KD','NV.IND.MANF.ZS','SI.POV.GINI',
-          'EN.POP.SLUM.UR.ZS','subsidies','EN.ATM.GHGT.KT.CE','ER.MRN.PTMR.ZS','ER.LND.PTLD.ZS'
+          'EN.POP.SLUM.UR.ZS','subsidies','EN.GHG.ALL.MT.CE.AR5','ER.MRN.PTMR.ZS','ER.LND.PTLD.ZS'
           ,'GE.EST','DT.TDS.DECT.EX.ZS', 'sdg_index_score')
 
 sdg_names <- c('SDG 1: Extreme Poverty','SDG 2: Undernourishment','SDG 3: Maternal Mortality','SDG 4: Learning Poverty','SDG 5: Women, Business, Law Index',
