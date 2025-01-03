@@ -727,9 +727,6 @@ fao_stats_df &lt;- read_csv(paste0(raw_dir, &quot;FAOSTAT_data_en_9-22-2023.csv&
   summarise(across(c(&#39;undernourish&#39;,&#39;severe_food_insecurity&#39;), mean, na.rm=TRUE)) %&gt;%
   select(iso3c, undernourish, severe_food_insecurity) 
 
-#prosperity data
-
-
 
 
 ##Harvard’s Economic complexity index (https://atlas.cid.harvard.edu/rankings).  Downloaded Aug 24, 2023
@@ -808,6 +805,33 @@ bli_df &lt;- read_csv(paste0(raw_dir, &#39;BLI_20230824.csv&#39;)) %&gt;%
   group_by(iso3c) %&gt;%
   summarise(better_life_index=sum(better_life_subindex))
 
+#add legatum prosperity index
+# https://www.prosperity.com/
+# downloaded on 2024-12-20
+legatum_prosperity_df &lt;- read_csv(paste0(raw_dir, &#39;legatum_prosperity_index.csv&#39;)) %&gt;%
+  janitor::clean_names() %&gt;%
+  transmute(
+    iso3c=iso3c,
+    date=end_date,
+    legatum_health_index=health
+  ) %&gt;%
+  select(iso3c, legatum_health_index)
+
+# add Global Health Security Index (GHSI) overall score
+ghsi_df &lt;- read_csv(paste0(raw_dir, &#39;2021-GHS-Index-April-2022.csv&#39;)) %&gt;%
+  janitor::clean_names() %&gt;%
+
+  transmute(
+    iso3c=iso3c,
+    date=year,
+    ghsindex=overall_score
+  ) %&gt;%
+  select(iso3c, date, ghsindex) %&gt;%
+  group_by(iso3c) %&gt;%
+  filter(date&gt;=2021) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;ghsindex&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, ghsindex)
+
 #bring it all together
 correlates_df_end_date &lt;- correlates_df %&gt;%
   left_join(ge_df) %&gt;%
@@ -815,7 +839,8 @@ correlates_df_end_date &lt;- correlates_df %&gt;%
   left_join(hci_df) %&gt;%
   left_join(undernourish_df) %&gt;%
   left_join(mmt_df) %&gt;%
-  left_join(lpov_df) %&gt;%
+  left_join(lpov_df) %&gt;%  left_join(bli_df) %&gt;%       left_join(fao_stats_df) %&gt;%
+  
   left_join(wbl_df) %&gt;%
   left_join(safely_df) %&gt;%
   left_join(elect_df) %&gt;%
@@ -831,8 +856,9 @@ correlates_df_end_date &lt;- correlates_df %&gt;%
   left_join(ec_complex_df) %&gt;%
   left_join(press_free_df) %&gt;%
   left_join(bli_df) %&gt;%       left_join(fao_stats_df) %&gt;%
+  left_join(legatum_prosperity_df) %&gt;% left_join(ghsi_df) %&gt;%
   filter(region!=&quot;Aggregates&quot;) %&gt;%
-  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.GHG.ALL.MT.CE.AR5&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;,                   &#39;undernourish&#39;, &#39;severe_food_insecurity&#39;))
+  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.GHG.ALL.MT.CE.AR5&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;,                   &#39;undernourish&#39;, &#39;severe_food_insecurity&#39;, &#39;legatum_health_index&#39;, &#39;ghsindex&#39;)) 
 
 
 sdgs &lt;- c(&#39;SI.POV.DDAY&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,
@@ -1239,6 +1265,33 @@ bli_df &lt;- read_csv(paste0(raw_dir, &#39;BLI_20230824.csv&#39;)) %&gt;%
   group_by(iso3c) %&gt;%
   summarise(better_life_index=sum(better_life_subindex))
 
+#add legatum prosperity index
+# https://www.prosperity.com/
+# downloaded on 2024-12-20
+legatum_prosperity_df &lt;- read_csv(paste0(raw_dir, &#39;legatum_prosperity_index.csv&#39;)) %&gt;%
+  janitor::clean_names() %&gt;%
+  transmute(
+    iso3c=iso3c,
+    date=end_date,
+    legatum_health_index=health
+  ) %&gt;%
+  select(iso3c, legatum_health_index)
+
+# add Global Health Security Index (GHSI) overall score
+ghsi_df &lt;- read_csv(paste0(raw_dir, &#39;2021-GHS-Index-April-2022.csv&#39;)) %&gt;%
+  janitor::clean_names() %&gt;%
+
+  transmute(
+    iso3c=iso3c,
+    date=year,
+    ghsindex=overall_score
+  ) %&gt;%
+  select(iso3c, date, ghsindex) %&gt;%
+  group_by(iso3c) %&gt;%
+  filter(date&gt;=2021-4) %&gt;% #take 5 latest years
+  summarise(across(c(&#39;ghsindex&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, ghsindex)
+
 
 #bring it all together
 correlates_df_avg &lt;- correlates_df %&gt;%
@@ -1263,8 +1316,9 @@ correlates_df_avg &lt;- correlates_df %&gt;%
   left_join(ec_complex_df) %&gt;%
   left_join(press_free_df) %&gt;%
   left_join(bli_df) %&gt;%       left_join(fao_stats_df) %&gt;%
+  left_join(legatum_prosperity_df) %&gt;% left_join(ghsi_df) %&gt;%
   filter(region!=&quot;Aggregates&quot;) %&gt;%
-  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.GHG.ALL.MT.CE.AR5&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;,                   &#39;undernourish&#39;, &#39;severe_food_insecurity&#39;))</code></pre>
+  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.GHG.ALL.MT.CE.AR5&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;,                   &#39;undernourish&#39;, &#39;severe_food_insecurity&#39;, &#39;legatum_health_index&#39;, &#39;ghsindex&#39;))</code></pre>
 </div>
 <div id="now-do-a-three-year-average." class="section level3">
 <h3>Now do a three year average.</h3>
@@ -1637,6 +1691,32 @@ bli_df &lt;- read_csv(paste0(raw_dir, &#39;BLI_20230824.csv&#39;)) %&gt;%
   group_by(iso3c) %&gt;%
   summarise(better_life_index=sum(better_life_subindex))
 
+#add legatum prosperity index
+# https://www.prosperity.com/
+# downloaded on 2024-12-20
+legatum_prosperity_df &lt;- read_csv(paste0(raw_dir, &#39;legatum_prosperity_index.csv&#39;)) %&gt;%
+  janitor::clean_names() %&gt;%
+  transmute(
+    iso3c=iso3c,
+    date=end_date,
+    legatum_health_index=health
+  ) %&gt;%
+  select(iso3c, legatum_health_index)
+
+# add Global Health Security Index (GHSI) overall score
+ghsi_df &lt;- read_csv(paste0(raw_dir, &#39;2021-GHS-Index-April-2022.csv&#39;)) %&gt;%
+  janitor::clean_names() %&gt;%
+
+  transmute(
+    iso3c=iso3c,
+    date=year,
+    ghsindex=overall_score
+  ) %&gt;%
+  select(iso3c, date, ghsindex) %&gt;%
+  group_by(iso3c) %&gt;%
+  filter(date&gt;=2021-2) %&gt;% #take 2 latest years
+  summarise(across(c(&#39;ghsindex&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, ghsindex)
 
 #bring it all together
 correlates_df_avg &lt;- correlates_df %&gt;%
@@ -1661,8 +1741,9 @@ correlates_df_avg &lt;- correlates_df %&gt;%
   left_join(ec_complex_df) %&gt;%
   left_join(press_free_df) %&gt;%
   left_join(bli_df) %&gt;%       left_join(fao_stats_df) %&gt;%
+  left_join(legatum_prosperity_df) %&gt;% left_join(ghsi_df) %&gt;%
   filter(region!=&quot;Aggregates&quot;) %&gt;%
-  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.GHG.ALL.MT.CE.AR5&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;,                   &#39;undernourish&#39;, &#39;severe_food_insecurity&#39;))</code></pre>
+  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.GHG.ALL.MT.CE.AR5&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;,                   &#39;undernourish&#39;, &#39;severe_food_insecurity&#39;, &#39;legatum_health_index&#39;, &#39;ghsindex&#39;))</code></pre>
 </div>
 <div id="two-year-average" class="section level3">
 <h3>Two year average</h3>
@@ -2035,6 +2116,33 @@ bli_df &lt;- read_csv(paste0(raw_dir, &#39;BLI_20230824.csv&#39;)) %&gt;%
   group_by(iso3c) %&gt;%
   summarise(better_life_index=sum(better_life_subindex))
 
+#add legatum prosperity index
+# https://www.prosperity.com/
+# downloaded on 2024-12-20
+legatum_prosperity_df &lt;- read_csv(paste0(raw_dir, &#39;legatum_prosperity_index.csv&#39;)) %&gt;%
+  janitor::clean_names() %&gt;%
+  transmute(
+    iso3c=iso3c,
+    date=end_date,
+    legatum_health_index=health
+  ) %&gt;%
+  select(iso3c, legatum_health_index)
+
+# add Global Health Security Index (GHSI) overall score
+ghsi_df &lt;- read_csv(paste0(raw_dir, &#39;2021-GHS-Index-April-2022.csv&#39;)) %&gt;%
+  janitor::clean_names() %&gt;%
+
+  transmute(
+    iso3c=iso3c,
+    date=year,
+    ghsindex=overall_score
+  ) %&gt;%
+  select(iso3c, date, ghsindex) %&gt;%
+  group_by(iso3c) %&gt;%
+  filter(date&gt;=2021-1) %&gt;% #take 1 latest years
+  summarise(across(c(&#39;ghsindex&#39;), mean, na.rm=TRUE)) %&gt;%
+  select(iso3c, ghsindex)
+
 #bring it all together
 correlates_df_avg &lt;- correlates_df %&gt;%
   left_join(ge_df) %&gt;%
@@ -2058,8 +2166,9 @@ correlates_df_avg &lt;- correlates_df %&gt;%
   left_join(ec_complex_df) %&gt;%
   left_join(press_free_df) %&gt;%
   left_join(bli_df) %&gt;%       left_join(fao_stats_df) %&gt;%
+  left_join(legatum_prosperity_df) %&gt;% left_join(ghsi_df) %&gt;%
   filter(region!=&quot;Aggregates&quot;) %&gt;%
-  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.GHG.ALL.MT.CE.AR5&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;,                   &#39;undernourish&#39;, &#39;severe_food_insecurity&#39;))</code></pre>
+  select(iso3c, c(&#39;SI.POV.DDAY&#39;, &#39;SI.POV.GINI&#39;,&#39;GE.EST&#39;,&#39;NY.GDP.PCAP.KD&#39;,&#39;HD.HCI.OVRL&#39;,&#39;SN.ITK.DEFC.ZS&#39;,&#39;SH.STA.MMRT&#39;,&#39;SE.LPV.PRIM&#39;,&#39;SG.LAW.INDX&#39;,&#39;SH.H2O.SMDW.ZS&#39;,&quot;EG.ELC.ACCS.ZS&quot;,&#39;NV.IND.MANF.ZS&#39;,&#39;EN.POP.SLUM.UR.ZS&#39;,&#39;subsidies&#39;,&#39;EN.GHG.ALL.MT.CE.AR5&#39;,&#39;ER.MRN.PTMR.ZS&#39;,&#39;ER.LND.PTLD.ZS&#39;,&#39;DT.TDS.DECT.EX.ZS&#39;, &#39;sdg_index_score&#39;, &#39;hdi_value&#39;, &#39;env_perform_index&#39;, &#39;eci_value&#39;, &#39;press_free_score&#39;, &#39;better_life_index&#39;,                   &#39;undernourish&#39;, &#39;severe_food_insecurity&#39;, &#39;legatum_health_index&#39;, &#39;ghsindex&#39;))</code></pre>
 </div>
 </div>
 <div id="regression-predictors" class="section level2">

@@ -1478,9 +1478,9 @@ ggplot(fig, aes(x=var, y=abs(SPI...1))) +
 #| label: devcordf
 
 
-devindex <- c( 'eci_value','env_perform_index', 'better_life_index', 'hdi_value','HD.HCI.OVRL',   'press_free_score')
+devindex <- c( 'eci_value','env_perform_index', 'better_life_index', 'undernourish', 'severe_food_insecurity', 'legatum_health_index', 'ghsindex', 'hdi_value','HD.HCI.OVRL',   'press_free_score')
 
-devindex_names <- c('Economic Complexity Index','Environmental Performance Index','OECD Better Life Index', "UN Human Development Index", 'WB Human Capital Index','World Press Freedom Index' )
+devindex_names <- c('Economic Complexity Index','Environmental Performance Index','OECD Better Life Index', 'Prevalence of Undernourisment','Prevalence of Severe Food Insecurity', 'Legatum Prosperity Index (LPI) health sub-index score', 'Global Health Security Index (GHSI) overall score', "UN Human Development Index", 'WB Human Capital Index','World Press Freedom Index' )
 
 #get correlations with pvalues
 index_cor_full <- comparison_df %>%
@@ -1497,7 +1497,7 @@ index_cor_full <- comparison_df %>%
 
 #get just pearon correlation
 index_cor <- index_cor_full$r
-index_cor <- index_cor[6:11,1:5]
+index_cor <- index_cor[6:15,1:5]
 
 
 #round
@@ -1512,7 +1512,7 @@ index_col[abs(index_cor)<0.5] <- "white"
 
 #get statistical significance
 index_sig <- index_cor_full$P
-index_sig <- index_sig[6:11,1:5]
+index_sig <- index_sig[6:15,1:5]
 
 rownames(index_cor) <- devindex_names
 rownames(index_sig) <- devindex_names 
@@ -1520,7 +1520,7 @@ rownames(index_sig) <- devindex_names
 
 ```{r}
 #| label: fig5
-#| fig-height: 6
+#| fig-height: 7
 #| fig-width: 8
 
 
@@ -1612,6 +1612,221 @@ ggplot(fig, aes(x=var, y=abs(SPI...1))) +
         legend.position = 'top')
 ```
 
+### Figure 5. Absolute Value of Correlations between Key Development Indices - Low Income Countries
+
+```{r}
+plot_correlations <- function(comparison_df, devindex, devindex_names) {
+
+  
+  # Get correlations with p-values
+  index_cor_full <- comparison_df %>%
+    select(c('SPI.INDEX', 'SCI', 'ODIN_score', 'odb', 'gdb'), devindex) %>%
+    rename(
+      SPI = SPI.INDEX,
+      SCI = SCI, 
+      ODIN = ODIN_score, 
+      ODB = odb, 
+      GDB = gdb
+    ) %>%
+    as.matrix() %>%
+    rcorr()
+  
+  # Get just Pearson correlation
+  index_cor <- index_cor_full$r
+  index_cor <- index_cor[6:15, 1:5]
+  
+  # Round
+  index_cor <- round(index_cor, 2)
+  
+  # Color
+  index_col <- index_cor
+  index_col[abs(index_cor) >= 0.5] <- "#fcca46"
+  index_col[abs(index_cor) >= 0.65] <- "#a1c181"
+  index_col[abs(index_cor) >= 0.8] <- "#619b8a"
+  index_col[abs(index_cor) < 0.5] <- "white"
+  
+  # Get statistical significance
+  index_sig <- index_cor_full$P
+  index_sig <- index_sig[6:15, 1:5]
+  
+  rownames(index_cor) <- devindex_names
+  rownames(index_sig) <- devindex_names 
+  
+  # Create the plot
+  fig <- as_tibble(cbind(index_cor, index_sig, var = devindex_names), .name_repair = "universal") %>%
+    mutate(across(c(1:10), as.numeric)) %>%
+    mutate(SPI = case_when(
+      between(SPI...6, 0.05, 0.1) ~ paste0(SPI...1, "*"),
+      between(SPI...6, 0.01, 0.5) ~ paste0(SPI...1, "**"),
+      between(SPI...6, 0.0, 0.01) ~ paste0(SPI...1, "***"),
+      is.na(SPI...1) ~ "",
+      TRUE ~ paste0(SPI...1, "")
+    ),
+    SCI = case_when(
+      between(SCI...7, 0.05, 0.1) ~ paste0(SCI...2, "*"),
+      between(SCI...7, 0.01, 0.5) ~ paste0(SCI...2, "**"),
+      between(SCI...7, 0.0, 0.01) ~ paste0(SCI...2, "***"),
+      is.na(SCI...2) ~ "",
+      TRUE ~ paste0(SCI...2, "")
+    ),
+    ODIN = case_when(
+      between(ODIN...8, 0.05, 0.1) ~ paste0(ODIN...3, "*"),
+      between(ODIN...8, 0.01, 0.5) ~ paste0(ODIN...3, "**"),
+      between(ODIN...8, 0.0, 0.01) ~ paste0(ODIN...3, "***"),
+      is.na(ODIN...3) ~ "",
+      TRUE ~ paste0(ODIN...3, "")
+    ),
+    ODB = case_when(
+      between(ODB...9, 0.05, 0.1) ~ paste0(ODB...4, "*"),
+      between(ODB...9, 0.01, 0.5) ~ paste0(ODB...4, "**"),
+      between(ODB...9, 0.0, 0.01) ~ paste0(ODB...4, "***"),
+      is.na(ODB...4) ~ "",
+      TRUE ~ paste0(ODB...4, "")
+    ),
+    GDB = case_when(
+      between(GDB...10, 0.05, 0.1) ~ paste0(GDB...5, "*"),
+      between(GDB...10, 0.01, 0.5) ~ paste0(GDB...5, "**"),
+      between(GDB...10, 0.0, 0.01) ~ paste0(GDB...5, "***"),
+      is.na(GDB...5) ~ "",
+      TRUE ~ paste0(GDB...5, "")
+    )
+    ) %>%
+    mutate(var = factor(var, levels = rev(var)))
+  
+  ggplot(fig, aes(x = var, y = abs(SPI...1))) +
+    geom_point(aes(color = "SPI", shape = "SPI", fill = "SPI"), size = 4) +
+    geom_point(aes(y = abs(SCI...2), color = "SCI", shape = "SCI", fill = "SCI"), size = 4) +
+    geom_point(aes(y = abs(ODIN...3), color = "ODIN", shape = "ODIN", fill = "ODIN"), size = 4) +
+    geom_point(aes(y = abs(ODB...4), color = "ODB", shape = "ODB", fill = "ODB"), size = 4) +
+    geom_point(aes(y = abs(GDB...5), color = "GDB", shape = "GDB", fill = "GDB"), size = 4) +
+    coord_flip() +
+    scale_color_manual(
+      values = c(
+        "SPI" = "#264653",
+        "SCI" = "#2a9d8f",
+        "ODIN" = "#e9c46a",
+        "ODB" = "#f4a261",
+        "GDB" = "#e76f51"
+      )
+    ) +
+    scale_fill_manual(
+      values = c(
+        "SPI" = "#264653",
+        "SCI" = "#2a9d8f",
+        "ODIN" = "#e9c46a",
+        "ODB" = "#f4a261",
+        "GDB" = "#e76f51"
+      )
+    ) +
+    scale_shape_manual(
+      values = c(
+        "SPI" = 15,
+        "SCI" = 6,
+        "ODIN" = 17,
+        "ODB" = 18,
+        "GDB" = 19
+      )
+    ) +
+    xlab("") +
+    ylab("") +
+    scale_x_discrete(labels = scales::wrap_format(30)) +
+    theme_spi() +
+    guides(
+      fill = guide_legend(' '),
+      color = guide_legend(' '),
+      shape = guide_legend(' ')
+    ) +
+    theme(axis.text.y = element_text(size = 11),
+          legend.text = element_text(size = 11),
+          legend.position = 'top')
+}
+
+# Example usage:
+# plot_correlations(comparison_df, devindex, devindex_names)
+```
+
+```{r}
+#| label: fig5-lic
+#| fig-height: 6
+#| fig-width: 8
+
+
+comparison_lic_df <- comparison_df %>%
+  filter(income == "Low income")
+
+plot_correlations(comparison_lic_df, devindex, devindex_names)
+```
+### Figure 5. Absolute Value of Correlations between Key Development Indices - Lower Middle Income Countries
+
+```{r}
+#| label: fig5-lmic
+#| fig-height: 6
+#| fig-width: 8
+
+comparison_lmic_df <- comparison_df %>%
+  filter(income == "Lower middle income")
+
+plot_correlations(comparison_lmic_df, devindex, devindex_names)
+```
+
+### Figure 5. Absolute Value of Correlations between Key Development Indices - Upper Middle Income Countries
+
+```{r}
+#| label: fig5-umic
+#| fig-height: 6
+#| fig-width: 8
+
+comparison_umic_df <- comparison_df %>%
+  filter(income == "Upper middle income")
+
+plot_correlations(comparison_umic_df, devindex, devindex_names)
+
+```
+
+### Figure 5. Absolute Value of Correlations between Key Development Indices - High Income Countries
+
+
+```{r}
+#| label: fig5-hic
+#| fig-height: 6
+#| fig-width: 8
+
+comparison_hic_df <- comparison_df %>%
+  filter(income == "High income")
+
+plot_correlations(comparison_hic_df, devindex, devindex_names)
+
+```
+
+### Figure 5. Absolute Value of Correlations between Key Development Indices - LIC & LMIC
+
+```{r}
+#| label: fig5-lic-lmic
+#| fig-height: 6
+#| fig-width: 8
+
+comparison_lic_lmic_df <- comparison_df %>%
+  filter(income %in% c("Low income", "Lower middle income"))
+
+plot_correlations(comparison_lic_lmic_df, devindex, devindex_names)
+
+```
+
+### Figure 5. Absolute Value of Correlations between Key Development Indices - UMIC & HIC
+
+```{r}
+#| label: fig5-umic-hic
+#| fig-height: 6
+#| fig-width: 8
+
+comparison_umic_hic_df <- comparison_df %>%
+  filter(income %in% c("Upper middle income", "High income"))
+
+plot_correlations(comparison_umic_hic_df, devindex, devindex_names)
+
+```
+
+
 ## Figure 6. Theory of Change
 
 Figure produced using Microsoft Powerpoint.
@@ -1624,6 +1839,68 @@ Figure produced using Microsoft Powerpoint. Figure reproduced below.
 
 ![](./other_figures/SPI_dashboard.png)
 
+## Figure 8. SPI Overall Score and Pillar Scores in 2022
+
+### SPI Overall Score
+```{r}
+#| label: fig8a
+#| fig-height: 9
+#| fig-width: 9
+
+spi_mapper('spi_index_df', 'SPI.INDEX', "SPI Overall Score - 2023")
+```
+
+### SPI Data Use Score (Pillar 1)
+
+```{r}
+#| label: fig8b
+#| fig-height: 9
+#| fig-width: 9
+
+spi_mapper('spi_index_df', 'SPI.INDEX.PIL1', "SPI Data Use Score - 2023")
+```
+
+### SPI Data Services Score (Pillar 2)
+
+```{r}
+#| label: fig8c
+#| fig-height: 9
+#| fig-width: 9
+
+spi_mapper('spi_index_df', 'SPI.INDEX.PIL2', "SPI Data Services Score - 2023")
+```
+
+### SPI Data Products Score (Pillar 3)
+
+```{r}
+#| label: fig8d
+#| fig-height: 9
+#| fig-width: 9
+
+spi_mapper('spi_index_df', 'SPI.INDEX.PIL3', "SPI Data Products Score - 2023")
+
+```
+
+### SPI Data Sources Score (Pillar 4)
+
+```{r}
+#| label: fig8e
+#| fig-height: 9
+#| fig-width: 9
+
+spi_mapper('spi_index_df', 'SPI.INDEX.PIL4', "SPI Data Sources Score - 2023")
+```
+
+### SPI Data Infrastructure Score (Pillar 5)
+
+```{r}
+#| label: fig8f
+#| fig-height: 9
+#| fig-width: 9
+
+spi_mapper('spi_index_df', 'SPI.INDEX.PIL5', "SPI Data Infrastructure Score - 2023")
+
+```
 
 ## Table S1. An Overview of the World Bank's Statistical Capacity Index (SCI) in Selected Recent Studies
 
@@ -1962,7 +2239,7 @@ index_cor_full <- comparison_df %>%
 
 #get just pearon correlation
 index_cor <- index_cor_full$r
-index_cor <- index_cor[6:11,1:5]
+index_cor <- index_cor[6:15,1:5]
 
 #get correlation between indices
 index_between_cor <- index_cor_full$r
@@ -1970,7 +2247,7 @@ index_between_cor <- index_between_cor[1:5,1:5]
 
 #get Ns
 index_n <- index_cor_full$n
-index_n <- index_n[6:11,1:5]
+index_n <- index_n[6:15,1:5]
 
 
 #round
@@ -1985,7 +2262,7 @@ index_col[abs(index_cor)<0.5] <- "white"
 
 #get statistical significance
 index_sig <- index_cor_full$P
-index_sig <- index_sig[6:11,1:5]
+index_sig <- index_sig[6:15,1:5]
 
 rownames(index_cor) <- devindex_names
 rownames(index_sig) <- devindex_names 

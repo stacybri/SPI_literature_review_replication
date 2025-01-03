@@ -81,6 +81,10 @@ This file contains the data used to generate the tables and figures in the paper
 | eci_value | Economic Complexity Index |
 | press_free_score | Press Freedom Index |
 | better_life_index | OECD Better Life Index |
+| legatum_health_index | Legatum Prosperity Index |
+| undernourishment | Prevalence of undernourishment |
+| severe_food_insecurity | Prevalence of severe food insecurity |
+| ghsindex | Global Health Security Index (GHSI) overall score |
 | SPI.INDEX | Statistical Performance Indicators Overall Score |
 | SCI | Statistical Capacity Indicator Index |
 | ODIN_score | Open Data Index |
@@ -121,4 +125,8 @@ This file contains the data used to generate the tables and figures in the paper
 | eci_value | Economic Complexity Index (ECI) value |
 | press_free_score | World Press Freedom Index score |
 | better_life_index | OECD Better Life Index (BLI) overall score |
+| legatum_health_index | Legatum Prosperity Index (LPI) health sub-index score |
+| undernourishment | Prevalence of undernourishment |
+| severe_food_insecurity | Prevalence of severe food insecurity |
+| ghsindex | Global Health Security Index (GHSI) overall score |
 | WGI.OVL | World Governance Indicator (WGI) overall score |
