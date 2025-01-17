@@ -2838,6 +2838,18 @@ gdb_reg_df <- read_csv(paste0(output_dir, "/GDB_formatted_data.csv")) %>%
              is.na(VA.EST) )) %>%
   mutate(region_year_fe=paste(region,date,sep=" - "))
 
+#create one file and merge them together
+reg_data <- reg_df %>%
+  left_join(odin_reg_df %>% select(iso3c, date, ODIN_score), by=c('iso3c','date')) %>%
+  left_join(odb_reg_df %>% select(iso3c, date, odb), by=c('iso3c','date')) %>%
+  left_join(gdb_reg_df %>% select(iso3c, date, gdb), by=c('iso3c','date')) %>%
+  select(-region_year_fe) %>%
+  #convert names to stata format
+  janitor::clean_names() 
+
+#save as .dta
+write_dta(reg_data, paste0(output_dir, "/spi_lit_review_reg_data.dta"))
+
 
 ```
 
