@@ -1,0 +1,262 @@
+---
+title: "Statistical Capacity Measure - Data Quality Checks"
+format: 
+  docx:
+    number-sections: false
+execute:
+  echo: false
+  warning: false
+---
+
+The following document outlines the data quality checks for the Statistical Capacity Measure (SCM) data. The SCM indices include the SPI, ODIN, ODB, and GDB. The data quality checks include checking the correlation between the indices across years and checking if all values are between 0 and 100. 
+
+
+```{r}
+library(tidyverse)
+library(dataCompareR)
+library(validate)
+library(here)
+library(ggcorrplot)
+library(flextable)
+#set directories
+dir <- here()
+raw_dir <- paste0(dir, "/01_raw_data/")
+output_dir <- paste(dir, '03_output', sep="/")
+#weights (either unity (1) or population)
+wgt <- 1
+end_date=2023
+
+```
+
+
+```{r}
+#| label: dataread
+
+#import data specificially about the SPI
+spi_index_df <- read_csv(paste(raw_dir, 'SPI_index.csv', sep="/")) 
+
+
+spi_df_final <- read_csv( file = paste(raw_dir, 'SPI_data.csv', sep="/")) 
+
+#metadata 
+metadata <- data.frame(
+  series = c('SPI.INDEX', 'SPI.INDEX.PIL1', 'SPI.INDEX.PIL2', 'SPI.INDEX.PIL3', 'SPI.INDEX.PIL4', 'SPI.INDEX.PIL5'),
+  indicator_name = c('SPI Overall Score', 'Pillar 1: Data Use', 'Pillar 2: Data Services', 'Pillar 3: Data Products', 'Pillar 4: Data Sources', 'Pillar 5: Data Infrastructure')
+)
+
+SPI_end_date <- spi_index_df %>%
+  filter(date==end_date) %>%
+  filter(!is.na(SPI.INDEX) & !is.na(weights)) %>%
+  mutate(ISO_A3_EH=iso3c) 
+
+SPI <- spi_index_df
+
+#read in regression data with covariates
+predictors_df <- read_csv(paste0(output_dir, "/SPI_regression_predictors.csv"))
+country_metadata <- read_csv(paste0(raw_dir, "country_metadata.csv"))
+
+
+#read in ODIN
+odin_df <- read_csv(paste0(output_dir, "/ODIN_formatted_data.csv")) %>%
+  select(iso3c, date, ODIN_score) %>%
+  left_join(country_metadata) %>%
+  left_join(predictors_df) %>%
+  filter(between(date,2016,2022))
+
+# ODB
+odb_df <- read_csv(paste0(output_dir, "/ODB_formatted_data.csv")) %>%
+  select(iso3c, date, odb) %>%
+  left_join(country_metadata) %>%
+  left_join(predictors_df) %>%
+  filter(between(date,2013,2022)) %>%
+  filter(!is.na(iso3c))
+
+# GDB
+#ODB Regression
+gdb_reg_df <- read_csv(paste0(output_dir, "/GDB_formatted_data.csv")) %>%
+  select(iso3c, date, gdb) %>%
+  left_join(country_metadata) %>%
+  left_join(predictors_df) %>%
+  filter(between(date,2016,2022))
+
+```
+```{r}
+#| label: correlations
+
+#for each of SPI, ODIN, ODB, GDB, correlate data across years. Then check if all values between 0 and 100
+#create a function to do so.
+scm_correlations <- function(data, indicator) {
+  data <- data %>%
+    select(iso3c, date, indicator) %>%
+    spread(date, indicator) %>%
+    select(-iso3c) %>%
+    as.matrix() %>%
+    cor(use="pairwise.complete.obs")
+}
+
+#SPI
+spi_cor <- scm_correlations(SPI, 'SPI.INDEX')
+
+#ODIN
+odin_cor <- scm_correlations(odin_df, 'ODIN_score')
+
+#ODB
+odb_cor <- scm_correlations(odb_df, 'odb')
+
+#GDB
+gdb_cor <- scm_correlations(gdb_reg_df, 'gdb')
+
+#creat a function to check if all values are between 0 and 100
+scm_check_values <- function(data, indicator) {
+  data <- data %>%
+    select(iso3c, date, indicator) %>%
+    spread(date, indicator) %>%
+    select(-iso3c) %>%
+    as.matrix() %>%
+    apply(1, function(x) all(x >= 0 & x <= 100, na.rm=TRUE))
+}
+
+#SPI
+spi_check <- scm_check_values(spi_index_df, 'SPI.INDEX')
+
+#ODIN
+odin_check <- scm_check_values(odin_df, 'ODIN_score')
+
+#ODB
+odb_check <- scm_check_values(odb_df, 'odb')
+
+#GDB
+gdb_check <- scm_check_values(gdb_reg_df, 'gdb')
+
+
+```
+
+# SPI
+
+## Correlation Matrix
+
+```{r}
+#plot correlation matrix
+spi_cor_plot <- ggcorrplot(spi_cor, type = "lower", lab = TRUE, method = "square", title = "SPI Correlation Matrix")
+spi_cor_plot
+```
+
+## Check Values
+
+In the following the range of values are examined to ensure that all values are between 0 and 100. 
+
+
+```{r}
+#| label: tbl_spi
+#| tbl-cap: "Quality Check: SPI Values Conform to Range Expectations (0-100)"
+#| #check if all values are between 0 and 100
+#put results in a summary table
+spi_check_summary <- data.frame(
+  Indicator = 'SPI',
+  Pass = all(spi_check)
+)
+
+
+flextable(spi_check_summary) %>%
+  autofit()
+```
+
+
+# ODIN
+
+## Correlation Matrix
+
+```{r}
+#plot correlation matrix
+
+odin_cor_plot <- ggcorrplot(odin_cor, type = "lower", lab = TRUE, method = "square", title = "ODIN Correlation Matrix")
+odin_cor_plot
+```
+
+## Check Values
+
+In the following the range of values are examined to ensure that all values are between 0 and 100.
+
+```{r}
+#| label: tbl_odin
+#| tbl-cap: "Quality Check: ODIN Values Conform to Range Expectations (0-100)"
+#check if all values are between 0 and 100
+#put results in a summary table
+odin_check_summary <- data.frame(
+  Indicator = 'ODIN',
+  Pass = all(odin_check)
+)
+
+flextable(odin_check_summary) %>%
+  autofit() 
+
+```
+
+# ODB
+
+## Correlation Matrix
+
+```{r}
+#plot correlation matrix
+
+odb_cor_plot <- ggcorrplot(odb_cor, type = "lower", lab = TRUE, method = "square", title = "ODB Correlation Matrix")
+
+odb_cor_plot
+
+```
+
+## Check Values
+
+In the following the range of values are examined to ensure that all values are between 0 and 100.
+
+
+```{r}
+#| label: tbl_odb
+#| tbl-cap: "Quality Check: ODB Values Conform to Range Expectations (0-100)"
+#check if all values are between 0 and 100
+#put results in a summary table
+odb_check_summary <- data.frame(
+  Indicator = 'ODB',
+  Pass = all(odb_check)
+)
+
+flextable(odb_check_summary) %>%
+  autofit()
+
+
+```
+
+# GDB
+
+## Correlation Matrix
+
+```{r}
+#plot correlation matrix
+
+gdb_cor_plot <- ggcorrplot(gdb_cor, type = "lower", lab = TRUE, method = "square", title = "GDB Correlation Matrix")
+
+gdb_cor_plot
+
+
+```
+
+## Check Values
+
+In the following the range of values are examined to ensure that all values are between 0 and 100.
+
+```{r}
+#| label: tbl_gdb
+#| tbl-cap: "Quality Check: GDB Values Conform to Range Expectations (0-100)"
+#| #check if all values are between 0 and 100
+#put results in a summary table
+
+gdb_check_summary <- data.frame(
+  Indicator = 'GDB',
+  Pass = all(gdb_check)
+)
+
+flextable(gdb_check_summary) %>%
+  autofit()
+```
+
+

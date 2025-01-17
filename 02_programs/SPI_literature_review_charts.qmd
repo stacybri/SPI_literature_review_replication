@@ -14,7 +14,10 @@ dpi: 400
 knitr:
   opts_chunk:
     fig.path: "./figures/"
+jupyter: python3
 ---
+
+
 
 ```{r}
 #| label: setup
@@ -46,7 +49,7 @@ raw_dir <- paste0(dir, "/01_raw_data/")
 output_dir <- paste(dir, '03_output', sep="/")
 #weights (either unity (1) or population)
 wgt <- 1
-end_date=2022
+end_date=2023
 
 #specification taking either latest year of data available for indices, 2 year, 3 year, or 5 year averages of indices and SDGs for correlations.  options: latest, 2yr, 3yr, 5yr
 specification <- "2yr"
@@ -393,7 +396,7 @@ spi_charts  <- function(data, indicator, title) {
       labs(
       title=str_wrap(paste(title, 'By Region', sep=" - "),100),
       caption = 'Source: World Bank. Statistical Performance Indicators.',
-      subtitle= 'Based on data for 2022 or the latest year available'
+      subtitle= 'Based on data for 2023 or the latest year available'
       ) +
       expand_limits(x=c(0,100)) +
       theme_spi() +
@@ -414,7 +417,7 @@ spi_charts  <- function(data, indicator, title) {
       labs(
       title=str_wrap(paste(title, 'By Income', sep=" - "),100),
       caption = 'Source: World Bank. Statistical Performance Indicators.',
-      subtitle= 'Based on data for 2022 or the latest year available'
+      subtitle= 'Based on data for 2023 or the latest year available'
       ) +
       scale_y_discrete(limits = income) +
       expand_limits(x=c(0,100)) +
@@ -490,7 +493,7 @@ spi_country_charts  <- function(data, indicator, title) {
       labs(
       title=str_wrap(paste(title, 'By Country', sep=" - "),100),
       caption = 'Source: World Bank. Statistical Performance Indicators.',
-      subtitle= 'Based on data for 2022 or the latest year available'
+      subtitle= 'Based on data for 2023 or the latest year available'
       ) +
       xlab('Score') +
       expand_limits(x=c(0,100)) +
@@ -591,7 +594,7 @@ income_charts <- function(data, indicator, title) {
       labs(
       title=str_wrap(paste(title, 'By Income', sep=" - "),100),
       caption = 'Source: World Bank. Statistical Performance Indicators.',
-      subtitle= 'Based on data for 2022 or the latest year available'
+      subtitle= 'Based on data for 2023 or the latest year available'
       ) +
       scale_y_discrete(limits = income) +
       expand_limits(x=c(0,100)) +
@@ -627,7 +630,7 @@ spi_income_aggregates <- function(data, indicator, title) {
       labs(
       title=str_wrap(paste(title, 'By Income', sep=" - "),100),
       caption = 'Source: World Bank. Statistical Performance Indicators.',
-      subtitle= 'Based on data for 2022 or the latest year available'
+      subtitle= 'Based on data for 2023 or the latest year available'
       ) +
       scale_y_discrete(limits = income) +
       expand_limits(x=c(0,100)) +
@@ -663,7 +666,7 @@ lending_charts <- function(data, indicator, title) {
       labs(
       title=str_wrap(paste(title, 'By Lending Status', sep=" - "),100),
       caption = 'Source: World Bank. Statistical Performance Indicators.',
-      subtitle= 'Based on data for 2022 or the latest year available'
+      subtitle= 'Based on data for 2023 or the latest year available'
       ) +
       scale_y_discrete(limits = lending_list) +
       expand_limits(x=c(0,100)) +
@@ -701,7 +704,7 @@ lending_chart_aggregate <- function(data, indicator, title) {
       labs(
       title=str_wrap(paste(title, 'By Lending Status', sep=" - "),100),
       caption = 'Source: World Bank. Statistical Performance Indicators.',
-      subtitle= 'Based on data for 2022 or the latest year available'
+      subtitle= 'Based on data for 2023 or the latest year available'
       ) +
       scale_y_discrete(limits = lending_list) +
       expand_limits(x=c(0,100)) +
@@ -764,7 +767,7 @@ fcs_charts <- function(data, indicator, title) {
       labs(
       title=str_wrap(paste(title, 'By Fragile and Conflict-affected Situations (FCS)', sep=" - "),100),
       caption = 'Source: World Bank. Statistical Performance Indicators.',
-      subtitle= 'Based on data for 2022 or the latest year available'
+      subtitle= 'Based on data for 2023 or the latest year available'
       ) +
       scale_y_discrete(limits = fcs_list) +
       expand_limits(x=c(0,100)) +
@@ -827,7 +830,7 @@ fcs_chart_aggregate <- function(data, indicator, title) {
       labs(
       title=str_wrap(paste(title, 'By Fragile and Conflict-affected Situations (FCS)', sep=" - "),100),
       caption = 'Source: World Bank. Statistical Performance Indicators.',
-      subtitle= 'Based on data for 2022 or the latest year available'
+      subtitle= 'Based on data for 2023 or the latest year available'
       ) +
       scale_y_discrete(limits = fcs_list) +
       expand_limits(x=c(0,100)) +
@@ -909,7 +912,7 @@ predictors_df <- read_csv(paste0(output_dir, "/SPI_regression_predictors.csv"))
 
 Table produced using Microsoft Word. Numbers come from research on each index.
 
-## Figure 1. Number of Household Surveys vs. Country Income, 1982- 2022
+## Figure 1. Number of Household Surveys vs. Country Income, 1982- 2023
 
 ```{r}
 #| label: incomesurveys
@@ -922,7 +925,7 @@ pip_df <- read_csv(paste0(output_dir, "/Figure_1_data.csv")) %>%
   mutate(log_welfare = log(mean_welfare)) # create logged welfare for figure
 
 
-#plot number of surveys against mean welfare in 2022.
+#plot number of surveys against mean welfare in 2023.
 ggplot(pip_df, aes(x=mean_welfare, y=number_surveys)) +
   geom_point(color='blue') +
   geom_smooth(method='lm', se=FALSE, color='darkred') +
@@ -939,7 +942,7 @@ ggplot(pip_df, aes(x=mean_welfare, y=number_surveys)) +
   labs(
     caption = str_wrap('Note: Estimated coefficients are shown from an OLS regression of the number of surveys on log of mean consumption (income); robust standard errors are in parentheses.',100)
   ) +
-  #annotate("label", x = 20, y = 5, label = eq_plot_txt(pov_df_2022), hjust = 0) +
+  #annotate("label", x = 20, y = 5, label = eq_plot_txt(pov_df_2023), hjust = 0) +
   theme(legend.position = 'bottom'
         )
 
@@ -970,6 +973,17 @@ dat <- table_2_df %>%
            Index=="EU Snapshot tool"    ~ "Snapshot",
            Index=="UN NQAF self checklist"  ~ "NQAF" ,                     
            Index=="Paris21 NSDS self assessment" ~ "NSDS"
+         ),
+         Index=case_when(
+           Index=="SPI" ~ "SPI (2023)",
+           Index=="SCI" ~ "SCI (2020)",
+           Index=="ODIN" ~ "ODIN (2022)",
+           Index=="Open Data Barometer" ~ "Open Data Barometer (2017)",
+           Index=="Global Data Barometer" ~ "Global Data Barometer (2021)",
+           Index=="Ibrahim Index of African Governance Statistical Capacity Measure" ~ "Ibrahim Index of African Governance Statistical Capacity Measure (2023)",
+           Index=="EU Snapshot tool"    ~ "EU Snapshot tool",
+           Index=="UN NQAF self checklist"  ~ "UN NQAF self checklist" ,                     
+           Index=="Paris21 NSDS self assessment" ~ "Paris21 NSDS self assessment"          
          )) 
 ```
 
@@ -1028,8 +1042,8 @@ radarfun <- function(variables) {
 radarplt <- function(variables, color = "#00AFBB", 
                                         vlabels = colnames(data), vlcex = 0.7,
                                         caxislabels = NULL,  ...) {
-  if (variables=="Ibrahim Index of African Governance Statistical Capacity Measure") {
-    title="Ibrahim Index"
+  if (variables=="Ibrahim Index of African Governance Statistical Capacity Measure (2023)") {
+    title="Ibrahim Index (2023)"
   } else {
     title=variables
   }
@@ -1462,6 +1476,7 @@ ggplot(fig, aes(x=var, y=abs(SPI...1))) +
   ylab("") +
   scale_x_discrete(labels=scales::wrap_format(30)) +
   theme_spi() +
+  labs(caption=str_wrap("Note: Latest year for the SPI is 2023, for the SCI is 2020, for the ODIN is 2022, for the ODB is 2017, and for the GDB is 2021.",100)) +
   guides(
     fill=guide_legend(' '),
     color=guide_legend(' '),
@@ -1470,7 +1485,229 @@ ggplot(fig, aes(x=var, y=abs(SPI...1))) +
   theme(axis.text.y=element_text(size=11),
         legend.text = element_text(size=11),
         legend.position = 'top')
+
+
+
 ```
+
+```{r}
+#turn into a function
+sdg_cor_function <- function(comparison_data) {
+  #get correlations with pvalues
+  index_cor_full <- comparison_data %>%
+    select(c('SPI.INDEX', 'SCI', 'ODIN_score', 'odb', 'gdb'),sdgs) %>%
+    rename(
+      SPI=SPI.INDEX,
+      SCI=SCI, 
+      ODIN=ODIN_score, 
+      ODB=odb, 
+      GDB=gdb
+    ) %>%
+    as.matrix() %>%
+    rcorr()
+  
+  #get just pearon correlation
+  index_cor <- index_cor_full$r
+  index_cor <- index_cor[6:23,1:5]
+  
+  
+  #round
+  index_cor <- round(index_cor,2)
+  
+  #color
+  index_col <- index_cor
+  index_col[abs(index_cor)>=0.5] <- "#fcca46"
+  index_col[abs(index_cor)>=0.65] <- "#a1c181"
+  index_col[abs(index_cor)>=0.8] <- "#619b8a"
+  index_col[abs(index_cor)<0.5] <- "white"
+  
+  #get statistical significance
+  index_sig <- index_cor_full$P
+  index_sig <- index_sig[6:23,1:5]
+  
+  rownames(index_cor) <- sdg_names
+  rownames(index_sig) <- sdg_names 
+  
+  fig <- as_tibble(cbind(index_cor, index_sig,var=sdg_names), .name_repair="universal") %>%
+  mutate(across(c(1:10), as.numeric)) %>%
+  mutate(SPI=case_when(
+            between(SPI...6,0.05,0.1) ~   paste0(SPI...1,"*"),
+            between(SPI...6,0.01,0.5) ~  paste0(SPI...1,"**"),
+            between(SPI...6,0.0,0.01) ~ paste0(SPI...1,"***"),
+           is.na(SPI...1) ~ "",
+           TRUE ~      paste0(SPI...1,"")
+            ),
+         SCI=case_when(
+           between(SCI...7,0.05,0.1) ~   paste0(SCI...2,"*"),
+           between(SCI...7,0.01,0.5) ~  paste0(SCI...2,"**"),
+           between(SCI...7,0.0,0.01) ~ paste0(SCI...2,"***"),
+           is.na(SCI...2) ~ "",
+           TRUE ~      paste0(SCI...2,"")
+           ),
+         ODIN=case_when(
+           between(ODIN...8,0.05,0.1) ~   paste0(ODIN...3,"*"),
+           between(ODIN...8,0.01,0.5) ~  paste0(ODIN...3,"**"),
+           between(ODIN...8,0.0,0.01) ~ paste0(ODIN...3,"***"),
+           is.na(ODIN...3) ~ "",
+           TRUE ~      paste0(ODIN...3,"")
+         ),
+         ODB=case_when(
+           between(ODB...9,0.05,0.1) ~   paste0(ODB...4,"*"),
+           between(ODB...9,0.01,0.5) ~  paste0(ODB...4,"**"),
+           between(ODB...9,0.0,0.01) ~ paste0(ODB...4,"***"),
+           is.na(ODB...4) ~ "",
+           TRUE ~      paste0(ODB...4,"")
+         ),
+         GDB=case_when(
+           between(GDB...10,0.05,0.1) ~   paste0(GDB...5,"*"),
+           between(GDB...10,0.01,0.5) ~  paste0(GDB...5,"**"),
+           between(GDB...10,0.0,0.01) ~ paste0(GDB...5,"***"),
+           is.na(GDB...5) ~ "",
+           TRUE ~      paste0(GDB...5,"")
+         )
+    )  %>%
+  mutate(var=factor(var, levels=rev(var)))
+
+  ggplot(fig, aes(x=var, y=abs(SPI...1))) +
+    geom_point(aes(color="SPI", shape="SPI", fill="SPI"), size=4) +
+    geom_point(aes(y=abs(SCI...2),color="SCI", shape="SCI", fill="SCI"), size=4) +
+    geom_point(aes(y=abs(ODIN...3),color="ODIN", shape="ODIN", fill="ODIN"), size=4) +
+    geom_point(aes(y=abs(ODB...4),color="ODB", shape="ODB", fill="ODB"), size=4) +
+    geom_point(aes(y=abs(GDB...5),color="GDB", shape="GDB", fill="GDB"), size=4) +
+    coord_flip() +
+    scale_color_manual(
+      values=c(
+        "SPI"="#264653",
+        "SCI"="#2a9d8f",
+        "ODIN" = "#e9c46a",
+        "ODB" = "#f4a261",
+        "GDB" = "#e76f51"
+      )
+    ) +
+    scale_fill_manual(
+      values=c(
+        "SPI"="#264653",
+        "SCI"="#2a9d8f",
+        "ODIN" = "#e9c46a",
+        "ODB" = "#f4a261",
+        "GDB" = "#e76f51"
+      )
+    ) +
+    scale_shape_manual(
+      values=c(
+        "SPI"=15,
+        "SCI"=6,
+        "ODIN" = 17,
+        "ODB" = 18,
+        "GDB" = 19
+      )
+    ) +
+    xlab("") +
+    ylab("") +
+    scale_x_discrete(labels=scales::wrap_format(30)) +
+    theme_spi() +
+    labs(caption=str_wrap("Note: Latest year for the SPI is 2023, for the SCI is 2020, for the ODIN is 2022, for the ODB is 2017, and for the GDB is 2021.",100)) +
+    guides(
+      fill=guide_legend(' '),
+      color=guide_legend(' '),
+      shape=guide_legend(' ')
+    ) +
+    theme(axis.text.y=element_text(size=11),
+          legend.text = element_text(size=11),
+          legend.position = 'top')
+}
+```
+
+
+### Figure 4. Absolute Value of Correlation between Key SDGs and Indexes - Low Income Countries
+
+
+```{r}
+#| label: fig4-lic
+#| fig-height: 10
+#| fig-width: 8
+
+
+comparison_lic_df <- comparison_df %>%
+  filter(income == "Low income")
+
+#comparison_df  %>% filter(income!='Not classified') %>%ggplot(aes(x=env_perform_index, y=SPI.INDEX)) + facet_wrap(~income) + geom_text(aes(label=iso3c)) + geom_smooth(method='lm', se=FALSE) + theme_bw()
+
+#comparison_df  %>% filter(income!='Not classified') %>%ggplot(aes(x=press_free_score, y=SPI.INDEX)) + facet_wrap(~income) + geom_text(aes(label=iso3c)) + geom_smooth(method='lm', se=FALSE) + theme_bw()
+
+sdg_cor_function(comparison_lic_df)
+```
+
+### Figure 4. Absolute Value of Correlation between Key SDGs and Indexes - Lower Middle Income Countries
+
+```{r}
+#| label: fig4-lmic
+#| fig-height: 10
+#| fig-width: 8
+
+comparison_lmic_df <- comparison_df %>%
+  filter(income == "Lower middle income")
+
+sdg_cor_function(comparison_lmic_df)
+```
+
+### Figure 4. Absolute Value of Correlation between Key SDGs and Indexes - Upper Middle Income Countries
+
+```{r}
+#| label: fig4-umic
+#| fig-height: 10
+#| fig-width: 8
+
+comparison_umic_df <- comparison_df %>%
+  filter(income == "Upper middle income")
+
+sdg_cor_function(comparison_umic_df)
+
+```
+
+### Figure 4. Absolute Value of Correlation between Key SDGs and Indexes - High Income Countries
+
+
+```{r}
+#| label: fig4-hic
+#| fig-height: 10
+#| fig-width: 8
+
+comparison_hic_df <- comparison_df %>%
+  filter(income == "High income")
+
+sdg_cor_function(comparison_hic_df)
+
+```
+
+### Figure 4. Absolute Value of Correlation between Key SDGs and Indexes - LIC & LMIC
+
+```{r}
+#| label: fig4-lic-lmic
+#| fig-height: 10
+#| fig-width: 8
+
+comparison_lic_lmic_df <- comparison_df %>%
+  filter(income %in% c("Low income", "Lower middle income"))
+
+sdg_cor_function(comparison_lic_lmic_df)
+
+```
+
+### Figure 4. Absolute Value of Correlation between Key SDGs and Indexes - UMIC & HIC
+
+```{r}
+#| label: fig4-umic-hic
+#| fig-height: 10
+#| fig-width: 8
+
+comparison_umic_hic_df <- comparison_df %>%
+  filter(income %in% c("Upper middle income", "High income"))
+
+sdg_cor_function(comparison_umic_hic_df)
+
+```
+
 
 ## Figure 5. Absolute Value of Correlations between Key Development Indices
 
@@ -1602,6 +1839,7 @@ ggplot(fig, aes(x=var, y=abs(SPI...1))) +
   ylab("") +
   scale_x_discrete(labels=scales::wrap_format(30)) +
   theme_spi() +
+  labs(caption=str_wrap("Note: Latest year for the SPI is 2023, for the SCI is 2020, for the ODIN is 2022, for the ODB is 2017, and for the GDB is 2021.",100)) +
   guides(
     fill=guide_legend(' '),
     color=guide_legend(' '),
@@ -1615,11 +1853,11 @@ ggplot(fig, aes(x=var, y=abs(SPI...1))) +
 ### Figure 5. Absolute Value of Correlations between Key Development Indices - Low Income Countries
 
 ```{r}
-plot_correlations <- function(comparison_df, devindex, devindex_names) {
+plot_correlations <- function(comparison_data) {
 
   
   # Get correlations with p-values
-  index_cor_full <- comparison_df %>%
+  index_cor_full <- comparison_data %>%
     select(c('SPI.INDEX', 'SCI', 'ODIN_score', 'odb', 'gdb'), devindex) %>%
     rename(
       SPI = SPI.INDEX,
@@ -1731,6 +1969,7 @@ plot_correlations <- function(comparison_df, devindex, devindex_names) {
     ylab("") +
     scale_x_discrete(labels = scales::wrap_format(30)) +
     theme_spi() +
+   labs(caption=str_wrap("Note: Latest year for the SPI is 2023, for the SCI is 2020, for the ODIN is 2022, for the ODB is 2017, and for the GDB is 2021.",100)) +
     guides(
       fill = guide_legend(' '),
       color = guide_legend(' '),
@@ -1742,7 +1981,7 @@ plot_correlations <- function(comparison_df, devindex, devindex_names) {
 }
 
 # Example usage:
-# plot_correlations(comparison_df, devindex, devindex_names)
+# plot_correlations(comparison_df)
 ```
 
 ```{r}
@@ -1754,7 +1993,11 @@ plot_correlations <- function(comparison_df, devindex, devindex_names) {
 comparison_lic_df <- comparison_df %>%
   filter(income == "Low income")
 
-plot_correlations(comparison_lic_df, devindex, devindex_names)
+#comparison_df  %>% filter(income!='Not classified') %>%ggplot(aes(x=env_perform_index, y=SPI.INDEX)) + facet_wrap(~income) + geom_text(aes(label=iso3c)) + geom_smooth(method='lm', se=FALSE) + theme_bw()
+
+#comparison_df  %>% filter(income!='Not classified') %>%ggplot(aes(x=press_free_score, y=SPI.INDEX)) + facet_wrap(~income) + geom_text(aes(label=iso3c)) + geom_smooth(method='lm', se=FALSE) + theme_bw()
+
+plot_correlations(comparison_lic_df)
 ```
 ### Figure 5. Absolute Value of Correlations between Key Development Indices - Lower Middle Income Countries
 
@@ -1766,7 +2009,7 @@ plot_correlations(comparison_lic_df, devindex, devindex_names)
 comparison_lmic_df <- comparison_df %>%
   filter(income == "Lower middle income")
 
-plot_correlations(comparison_lmic_df, devindex, devindex_names)
+plot_correlations(comparison_lmic_df)
 ```
 
 ### Figure 5. Absolute Value of Correlations between Key Development Indices - Upper Middle Income Countries
@@ -1779,7 +2022,7 @@ plot_correlations(comparison_lmic_df, devindex, devindex_names)
 comparison_umic_df <- comparison_df %>%
   filter(income == "Upper middle income")
 
-plot_correlations(comparison_umic_df, devindex, devindex_names)
+plot_correlations(comparison_umic_df)
 
 ```
 
@@ -1794,7 +2037,7 @@ plot_correlations(comparison_umic_df, devindex, devindex_names)
 comparison_hic_df <- comparison_df %>%
   filter(income == "High income")
 
-plot_correlations(comparison_hic_df, devindex, devindex_names)
+plot_correlations(comparison_hic_df)
 
 ```
 
@@ -1808,7 +2051,7 @@ plot_correlations(comparison_hic_df, devindex, devindex_names)
 comparison_lic_lmic_df <- comparison_df %>%
   filter(income %in% c("Low income", "Lower middle income"))
 
-plot_correlations(comparison_lic_lmic_df, devindex, devindex_names)
+plot_correlations(comparison_lic_lmic_df)
 
 ```
 
@@ -1822,7 +2065,7 @@ plot_correlations(comparison_lic_lmic_df, devindex, devindex_names)
 comparison_umic_hic_df <- comparison_df %>%
   filter(income %in% c("Upper middle income", "High income"))
 
-plot_correlations(comparison_umic_hic_df, devindex, devindex_names)
+plot_correlations(comparison_umic_hic_df)
 
 ```
 
@@ -1839,12 +2082,12 @@ Figure produced using Microsoft Powerpoint. Figure reproduced below.
 
 ![](./other_figures/SPI_dashboard.png)
 
-## Figure 8. SPI Overall Score and Pillar Scores in 2022
+## Figure 8. SPI Overall Score and Pillar Scores in 2023
 
 ### SPI Overall Score
 ```{r}
 #| label: fig8a
-#| fig-height: 9
+#| fig-height: 6
 #| fig-width: 9
 
 spi_mapper('spi_index_df', 'SPI.INDEX', "SPI Overall Score - 2023")
@@ -1854,7 +2097,7 @@ spi_mapper('spi_index_df', 'SPI.INDEX', "SPI Overall Score - 2023")
 
 ```{r}
 #| label: fig8b
-#| fig-height: 9
+#| fig-height: 6
 #| fig-width: 9
 
 spi_mapper('spi_index_df', 'SPI.INDEX.PIL1', "SPI Data Use Score - 2023")
@@ -1864,7 +2107,7 @@ spi_mapper('spi_index_df', 'SPI.INDEX.PIL1', "SPI Data Use Score - 2023")
 
 ```{r}
 #| label: fig8c
-#| fig-height: 9
+#| fig-height: 6
 #| fig-width: 9
 
 spi_mapper('spi_index_df', 'SPI.INDEX.PIL2', "SPI Data Services Score - 2023")
@@ -1874,7 +2117,7 @@ spi_mapper('spi_index_df', 'SPI.INDEX.PIL2', "SPI Data Services Score - 2023")
 
 ```{r}
 #| label: fig8d
-#| fig-height: 9
+#| fig-height: 6
 #| fig-width: 9
 
 spi_mapper('spi_index_df', 'SPI.INDEX.PIL3', "SPI Data Products Score - 2023")
@@ -1885,7 +2128,7 @@ spi_mapper('spi_index_df', 'SPI.INDEX.PIL3', "SPI Data Products Score - 2023")
 
 ```{r}
 #| label: fig8e
-#| fig-height: 9
+#| fig-height: 6
 #| fig-width: 9
 
 spi_mapper('spi_index_df', 'SPI.INDEX.PIL4', "SPI Data Sources Score - 2023")
@@ -1895,7 +2138,7 @@ spi_mapper('spi_index_df', 'SPI.INDEX.PIL4', "SPI Data Sources Score - 2023")
 
 ```{r}
 #| label: fig8f
-#| fig-height: 9
+#| fig-height: 6
 #| fig-width: 9
 
 spi_mapper('spi_index_df', 'SPI.INDEX.PIL5', "SPI Data Infrastructure Score - 2023")
@@ -1914,9 +2157,9 @@ Table produced using Microsoft Word, based on SPI metadata.
 
 Table produced using Microsoft Word, based on SPI metadata and UN SDG Indicator metadata.
 
-## Table S4. SPI overall score and Pillar Scores in 2022
+## Table S4. SPI overall score and Pillar Scores in 2023
 
-Below, the full list of countries by their SPI overall score in 2022 is presented. The first column is the country name and the following columns are the overall SPI overall score, and then the sub-scores for pillars 1, 2, 3, 4, and 5. The purpose of the SPI is to help countries assess and improve the performance of their statistical systems. The presentation of SPI overall scores is designed to reflect that aim. Small differences between countries should not be stressed since they can reflect imprecision arising from the currently available indicators rather than meaningful differences in performance. Instead, the presentation of overall SPI scores focuses on larger groupings of countries reflecting broad categories of performance as measured by the indicator framework. In total there are 186 countries with sufficient data to compute an index value. This set of countries covers 99.3 percent of the world population. Countries shaded in dark orange are the lowest performing, countries in dark green are the highest performing. Countries are grouped into five groups:
+Below, the full list of countries by their SPI overall score in 2023 is presented. The first column is the country name and the following columns are the overall SPI overall score, and then the sub-scores for pillars 1, 2, 3, 4, and 5. The purpose of the SPI is to help countries assess and improve the performance of their statistical systems. The presentation of SPI overall scores is designed to reflect that aim. Small differences between countries should not be stressed since they can reflect imprecision arising from the currently available indicators rather than meaningful differences in performance. Instead, the presentation of overall SPI scores focuses on larger groupings of countries reflecting broad categories of performance as measured by the indicator framework. In total there are 186 countries with sufficient data to compute an index value. This set of countries covers 99.3 percent of the world population. Countries shaded in dark orange are the lowest performing, countries in dark green are the highest performing. Countries are grouped into five groups:
 
 -   **Top Quintile**: Countries in the Top quintile are classified in this group. Shading in [dark green]{style="color:#2ec4b6"}.\
 -   **4th Quintile**: Countries in the 4th quintile, or those above the 60th percentile but below the 80th percentile are in this group. Shading in [light green]{style="color:#acece7"}.\
@@ -2220,6 +2463,9 @@ flextable(comb_tab) %>%
 
 ```
 
+Note: Latest year for the SPI is 2023, for the SCI is 2020, for the ODIN is 2022, for the ODB is 2017, and for the GDB is 2021.
+
+
 ## Table S7. Bivariate Correlation between Statistical Indexes and Key Development Indices
 
 
@@ -2435,6 +2681,8 @@ flextable(comb_tab) %>%
 
 ```
 
+Note: Latest year for the SPI is 2023, for the SCI is 2020, for the ODIN is 2022, for the ODB is 2017, and for the GDB is 2021.
+
 ```{r}
 #| eval: false
 #| include: false
@@ -2512,7 +2760,7 @@ countries_2016 <- unique(SPI_2016$country)
 reg_df <- SPI_2016 %>%
   select(country, iso3c, date, region, SPI.INDEX, SPI.INDEX.PIL1, SPI.INDEX.PIL2, SPI.INDEX.PIL3, SPI.INDEX.PIL4, SPI.INDEX.PIL5) %>%
   left_join(predictors_df) %>%
-  filter(between(date,2016,2022)) %>%
+  filter(between(date,2016,2023)) %>%
   filter(!(is.na(SPI.INDEX) | 
              is.na(NY.GDP.PCAP.KD) |
              is.na(NV.IND.MANF.ZS) |
@@ -2607,7 +2855,7 @@ gm <- tibble::tribble(
 
 ```
 
-## Table S8. Relationship between the SDG Index Overall Score from the 2023 Sustainable Development Report and SPI scores, 2016-2022
+## Table S8. Relationship between the SDG Index Overall Score from the 2023 Sustainable Development Report and SPI scores, 2016-2023
 
 ```{r}
 
@@ -2651,6 +2899,7 @@ gm <- tibble::tribble(
                               "factor(date)2020"="Year 2020",
                               "factor(date)2021"="Year 2021",
                               "factor(date)2022"="Year 2022",
+                              "factor(date)2023"="Year 2023",
                               "(Intercept)" = "Constant",
                               "CC.EST" = "WGI: Control of Corruption: Estimate",
                               "GE.EST" = "WGI: Governance Effectiveness: Estimate",
@@ -2733,6 +2982,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
                               "factor(date)2020"="Year 2020",
                               "factor(date)2021"="Year 2021",
                               "factor(date)2022"="Year 2022",
+                              "factor(date)2023"="Year 2023",
                               "(Intercept)" = "Constant",
                               "CC.EST" = "WGI: Control of Corruption: Estimate",
                               "GE.EST" = "WGI: Governance Effectiveness: Estimate",
@@ -2762,7 +3012,7 @@ print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma
 ```
 
 
-## Table S10. Relationship between the Economic Complexity Index and SPI scores, 2016-2022
+## Table S10. Relationship between the Economic Complexity Index and SPI scores, 2016-2023
 
 ```{r}
 
@@ -2806,6 +3056,7 @@ modelsummary(SDG_models,
                               "factor(date)2020"="Year 2020",
                               "factor(date)2021"="Year 2021",
                               "factor(date)2022"="Year 2022",
+                              "factor(date)2023"="Year 2023",
                               "(Intercept)" = "Constant",
                               "CC.EST" = "WGI: Control of Corruption: Estimate",
                               "GE.EST" = "WGI: Governance Effectiveness: Estimate",
@@ -2837,7 +3088,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 ```
 
 
-## Table S11. Relationship between the Environmental Performance Index and SPI scores, 2016-2022
+## Table S11. Relationship between the Environmental Performance Index and SPI scores, 2016-2023
 
 ```{r}
 
@@ -2881,6 +3132,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
                               "factor(date)2020"="Year 2020",
                               "factor(date)2021"="Year 2021",
                               "factor(date)2022"="Year 2022",
+                              "factor(date)2023"="Year 2023",
                               "(Intercept)" = "Constant",
                               "CC.EST" = "WGI: Control of Corruption: Estimate",
                               "GE.EST" = "WGI: Governance Effectiveness: Estimate",
@@ -2912,7 +3164,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 
 ```
 
-## Table S12. Relationship between the OECD Better Life Index and SPI scores, 2016-2022
+## Table S12. Relationship between the OECD Better Life Index and SPI scores, 2016-2023
 
 ```{r}
 
@@ -2956,6 +3208,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
                               "factor(date)2020"="Year 2020",
                               "factor(date)2021"="Year 2021",
                               "factor(date)2022"="Year 2022",
+                              "factor(date)2023"="Year 2023",
                               "(Intercept)" = "Constant",
                               "CC.EST" = "WGI: Control of Corruption: Estimate",
                               "GE.EST" = "WGI: Governance Effectiveness: Estimate",
@@ -2987,7 +3240,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 
 ```
 
-## Table S13. Relationship between the UN Human Development Index and SPI scores, 2016-2022
+## Table S13. Relationship between the UN Human Development Index and SPI scores, 2016-2023
 
 ```{r}
 
@@ -3031,6 +3284,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
                               "factor(date)2020"="Year 2020",
                               "factor(date)2021"="Year 2021",
                               "factor(date)2022"="Year 2022",
+                              "factor(date)2023"="Year 2023",
                               "(Intercept)" = "Constant",
                               "CC.EST" = "WGI: Control of Corruption: Estimate",
                               "GE.EST" = "WGI: Governance Effectiveness: Estimate",
@@ -3063,7 +3317,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 ```
 
 
-## Table S14. Relationship between the WB Human Capital Index and SPI scores, 2016-2022
+## Table S14. Relationship between the WB Human Capital Index and SPI scores, 2016-2023
 
 ```{r}
 
@@ -3107,6 +3361,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
                               "factor(date)2020"="Year 2020",
                               "factor(date)2021"="Year 2021",
                               "factor(date)2022"="Year 2022",
+                              "factor(date)2023"="Year 2023",
                               "(Intercept)" = "Constant",
                               "CC.EST" = "WGI: Control of Corruption: Estimate",
                               "GE.EST" = "WGI: Governance Effectiveness: Estimate",
@@ -3138,7 +3393,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
 
 ```
 
-## Table S15. Relationship between the World Press Freedom Index and SPI scores, 2016-2022
+## Table S15. Relationship between the World Press Freedom Index and SPI scores, 2016-2023
 
 ```{r}
 
@@ -3182,6 +3437,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
                               "factor(date)2020"="Year 2020",
                               "factor(date)2021"="Year 2021",
                               "factor(date)2022"="Year 2022",
+                              "factor(date)2023"="Year 2023",
                               "(Intercept)" = "Constant",
                               "CC.EST" = "WGI: Control of Corruption: Estimate",
                               "GE.EST" = "WGI: Governance Effectiveness: Estimate",
@@ -3264,6 +3520,7 @@ print(paste0("Model 6: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u="
                               "factor(date)2020"="Year 2020",
                               "factor(date)2021"="Year 2021",
                               "factor(date)2022"="Year 2022",
+                              "factor(date)2023"="Year 2023",
                               "(Intercept)" = "Constant",
                               "CC.EST" = "WGI: Control of Corruption: Estimate",
                               "GE.EST" = "WGI: Governance Effectiveness: Estimate",
@@ -3343,6 +3600,7 @@ print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma
                               "factor(date)2020"="Year 2020",
                               "factor(date)2021"="Year 2021",
                               "factor(date)2022"="Year 2022",
+                              "factor(date)2023"="Year 2023",
                               "(Intercept)" = "Constant",
                               "CC.EST" = "WGI: Control of Corruption: Estimate",
                               "GE.EST" = "WGI: Governance Effectiveness: Estimate",
@@ -3365,6 +3623,8 @@ p <- plm::plm(env_perform_index ~  ODIN_score + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS 
 print(paste0("ODIN Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
 
 p <- plm::plm(env_perform_index ~  odb, index=c('country', 'date'), data=odb_reg_df, model='random') 
+
+
 print(paste0("ODB Model 2: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma_u=",round(sqrt(p$ercomp$sigma2[2]),2)))
 
 p <- plm::plm(env_perform_index ~  odb + NE.TRD.GNFS.ZS + NV.IND.MANF.ZS + NV.AGR.TOTL.ZS +  SE.PRM.ENRR   + log(NY.GDP.PCAP.KD), index=c('country', 'date'), data=odb_reg_df, model='random') 
@@ -3422,6 +3682,7 @@ print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma
                               "factor(date)2020"="Year 2020",
                               "factor(date)2021"="Year 2021",
                               "factor(date)2022"="Year 2022",
+                              "factor(date)2023"="Year 2023",
                               "(Intercept)" = "Constant",
                               "CC.EST" = "WGI: Control of Corruption: Estimate",
                               "GE.EST" = "WGI: Governance Effectiveness: Estimate",
@@ -3501,6 +3762,7 @@ print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma
                               "factor(date)2020"="Year 2020",
                               "factor(date)2021"="Year 2021",
                               "factor(date)2022"="Year 2022",
+                              "factor(date)2023"="Year 2023",
                               "(Intercept)" = "Constant",
                               "CC.EST" = "WGI: Control of Corruption: Estimate",
                               "GE.EST" = "WGI: Governance Effectiveness: Estimate",
@@ -3579,6 +3841,7 @@ print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma
                               "factor(date)2020"="Year 2020",
                               "factor(date)2021"="Year 2021",
                               "factor(date)2022"="Year 2022",
+                              "factor(date)2023"="Year 2023",
                               "(Intercept)" = "Constant",
                               "CC.EST" = "WGI: Control of Corruption: Estimate",
                               "GE.EST" = "WGI: Governance Effectiveness: Estimate",
@@ -3657,6 +3920,7 @@ print(paste0("ODB Model 3: sigma_e=",round(sqrt(p$ercomp$sigma2[1]),2), ". sigma
                               "factor(date)2020"="Year 2020",
                               "factor(date)2021"="Year 2021",
                               "factor(date)2022"="Year 2022",
+                              "factor(date)2023"="Year 2023",
                               "(Intercept)" = "Constant",
                               "CC.EST" = "WGI: Control of Corruption: Estimate",
                               "GE.EST" = "WGI: Governance Effectiveness: Estimate",

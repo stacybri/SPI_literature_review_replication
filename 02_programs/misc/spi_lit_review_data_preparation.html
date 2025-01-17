@@ -628,10 +628,10 @@ debt_df &lt;- wb_data(country=&quot;all&quot;,
 #https://dashboards.sdgindex.org/explorer
 # accessed on 2023-07-20
 
-sdg_index &lt;- read_excel(path=paste0(raw_dir, &quot;/SDR2023-data.xlsx&quot;),
+sdg_index &lt;- read_excel(path=paste0(raw_dir, &quot;/SDR2024-data.xlsx&quot;),
                         sheet=&#39;Backdated SDG Index&#39;
 ) %&gt;%
-  transmute(iso3c=`Country Code ISO3`,
+  transmute(iso3c=id,
          date=year,
          sdg_index_score=`SDG Index Score`) %&gt;%
   group_by(iso3c) %&gt;%
@@ -693,7 +693,7 @@ epi_df &lt;- bind_rows(epi_2024_df,epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
   select(iso3c, env_perform_index)
 
 # FAO food security index and prevalence of undernourishment (https://www.fao.org/faostat/en/#data/FS)
-fao_stats_df &lt;- read_csv(paste0(raw_dir, &quot;FAOSTAT_data_en_9-22-2023.csv&quot;)) %&gt;%
+fao_stats_df &lt;- read_csv(paste0(raw_dir, &quot;FAOSTAT_data_en_1-6-2025.csv&quot;)) %&gt;%
     mutate(geoAreaCode=as.numeric(`Area Code (M49)`)) %&gt;% #convert to numeric
     left_join(
         read_csv(paste0(raw_dir, &quot;/metadata/iso_codes.csv&quot;) ) %&gt;%
@@ -1091,10 +1091,10 @@ debt_df &lt;- wb_data(country=&quot;all&quot;,
 #https://dashboards.sdgindex.org/explorer
 # accessed on 2023-07-20
 
-sdg_index &lt;- read_excel(path=paste0(raw_dir, &quot;/SDR2023-data.xlsx&quot;),
+sdg_index &lt;- read_excel(path=paste0(raw_dir, &quot;/SDR2024-data.xlsx&quot;),
                         sheet=&#39;Backdated SDG Index&#39;
 ) %&gt;%
-  transmute(iso3c=`Country Code ISO3`,
+  transmute(iso3c=`id`,
          date=year,
          sdg_index_score=`SDG Index Score`) %&gt;%
   group_by(iso3c) %&gt;%
@@ -1156,7 +1156,7 @@ epi_df &lt;- bind_rows(epi_2024_df,epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
   select(iso3c, env_perform_index)
 
 # FAO food security index and prevalence of undernourishment (https://www.fao.org/faostat/en/#data/FS)
-fao_stats_df &lt;- read_csv(paste0(raw_dir, &quot;FAOSTAT_data_en_9-22-2023.csv&quot;)) %&gt;%
+fao_stats_df &lt;- read_csv(paste0(raw_dir, &quot;FAOSTAT_data_en_1-6-2025.csv&quot;)) %&gt;%
     mutate(geoAreaCode=as.numeric(`Area Code (M49)`)) %&gt;% #convert to numeric
     left_join(
         read_csv(paste0(raw_dir, &quot;/metadata/iso_codes.csv&quot;) ) %&gt;%
@@ -1518,10 +1518,10 @@ debt_df &lt;- wb_data(country=&quot;all&quot;,
 #https://dashboards.sdgindex.org/explorer
 # accessed on 2023-07-20
 
-sdg_index &lt;- read_excel(path=paste0(raw_dir, &quot;/SDR2023-data.xlsx&quot;),
+sdg_index &lt;- read_excel(path=paste0(raw_dir, &quot;/SDR2024-data.xlsx&quot;),
                         sheet=&#39;Backdated SDG Index&#39;
 ) %&gt;%
-  transmute(iso3c=`Country Code ISO3`,
+  transmute(iso3c=id,
          date=year,
          sdg_index_score=`SDG Index Score`) %&gt;%
   group_by(iso3c) %&gt;%
@@ -1581,7 +1581,7 @@ epi_df &lt;- bind_rows(epi_2024_df,epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
   select(iso3c, env_perform_index)
 
 # FAO food security index and prevalence of undernourishment (https://www.fao.org/faostat/en/#data/FS)
-fao_stats_df &lt;- read_csv(paste0(raw_dir, &quot;FAOSTAT_data_en_9-22-2023.csv&quot;)) %&gt;%
+fao_stats_df &lt;- read_csv(paste0(raw_dir, &quot;FAOSTAT_data_en_1-6-2025.csv&quot;)) %&gt;%
     mutate(geoAreaCode=as.numeric(`Area Code (M49)`)) %&gt;% #convert to numeric
     left_join(
         read_csv(paste0(raw_dir, &quot;/metadata/iso_codes.csv&quot;) ) %&gt;%
@@ -1943,10 +1943,10 @@ debt_df &lt;- wb_data(country=&quot;all&quot;,
 #https://dashboards.sdgindex.org/explorer
 # accessed on 2023-07-20
 
-sdg_index &lt;- read_excel(path=paste0(raw_dir, &quot;/SDR2023-data.xlsx&quot;),
+sdg_index &lt;- read_excel(path=paste0(raw_dir, &quot;/SDR2024-data.xlsx&quot;),
                         sheet=&#39;Backdated SDG Index&#39;
 ) %&gt;%
-  transmute(iso3c=`Country Code ISO3`,
+  transmute(iso3c=id,
          date=year,
          sdg_index_score=`SDG Index Score`) %&gt;%
   group_by(iso3c) %&gt;%
@@ -2006,7 +2006,7 @@ epi_df &lt;- bind_rows(epi_2024_df,epi_2022_df, epi_2020_df, epi_2018_df) %&gt;%
   select(iso3c, env_perform_index)
 
 # FAO food security index and prevalence of undernourishment (https://www.fao.org/faostat/en/#data/FS)
-fao_stats_df &lt;- read_csv(paste0(raw_dir, &quot;FAOSTAT_data_en_9-22-2023.csv&quot;)) %&gt;%
+fao_stats_df &lt;- read_csv(paste0(raw_dir, &quot;FAOSTAT_data_en_1-6-2025.csv&quot;)) %&gt;%
     mutate(geoAreaCode=as.numeric(`Area Code (M49)`)) %&gt;% #convert to numeric
     left_join(
         read_csv(paste0(raw_dir, &quot;/metadata/iso_codes.csv&quot;) ) %&gt;%

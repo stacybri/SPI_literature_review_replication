@@ -318,10 +318,10 @@ debt_df <- wb_data(country="all",
 #https://dashboards.sdgindex.org/explorer
 # accessed on 2023-07-20
 
-sdg_index <- read_excel(path=paste0(raw_dir, "/SDR2023-data.xlsx"),
+sdg_index <- read_excel(path=paste0(raw_dir, "/SDR2024-data.xlsx"),
                         sheet='Backdated SDG Index'
 ) %>%
-  transmute(iso3c=`Country Code ISO3`,
+  transmute(iso3c=id,
          date=year,
          sdg_index_score=`SDG Index Score`) %>%
   group_by(iso3c) %>%
@@ -383,7 +383,7 @@ epi_df <- bind_rows(epi_2024_df,epi_2022_df, epi_2020_df, epi_2018_df) %>%
   select(iso3c, env_perform_index)
 
 # FAO food security index and prevalence of undernourishment (https://www.fao.org/faostat/en/#data/FS)
-fao_stats_df <- read_csv(paste0(raw_dir, "FAOSTAT_data_en_9-22-2023.csv")) %>%
+fao_stats_df <- read_csv(paste0(raw_dir, "FAOSTAT_data_en_1-6-2025.csv")) %>%
     mutate(geoAreaCode=as.numeric(`Area Code (M49)`)) %>% #convert to numeric
     left_join(
         read_csv(paste0(raw_dir, "/metadata/iso_codes.csv") ) %>%
@@ -965,10 +965,10 @@ debt_df <- wb_data(country="all",
 #https://dashboards.sdgindex.org/explorer
 # accessed on 2023-07-20
 
-sdg_index <- read_excel(path=paste0(raw_dir, "/SDR2023-data.xlsx"),
+sdg_index <- read_excel(path=paste0(raw_dir, "/SDR2024-data.xlsx"),
                         sheet='Backdated SDG Index'
 ) %>%
-  transmute(iso3c=`Country Code ISO3`,
+  transmute(iso3c=`id`,
          date=year,
          sdg_index_score=`SDG Index Score`) %>%
   group_by(iso3c) %>%
@@ -1030,7 +1030,7 @@ epi_df <- bind_rows(epi_2024_df,epi_2022_df, epi_2020_df, epi_2018_df) %>%
   select(iso3c, env_perform_index)
 
 # FAO food security index and prevalence of undernourishment (https://www.fao.org/faostat/en/#data/FS)
-fao_stats_df <- read_csv(paste0(raw_dir, "FAOSTAT_data_en_9-22-2023.csv")) %>%
+fao_stats_df <- read_csv(paste0(raw_dir, "FAOSTAT_data_en_1-6-2025.csv")) %>%
     mutate(geoAreaCode=as.numeric(`Area Code (M49)`)) %>% #convert to numeric
     left_join(
         read_csv(paste0(raw_dir, "/metadata/iso_codes.csv") ) %>%
@@ -1553,10 +1553,10 @@ debt_df <- wb_data(country="all",
 #https://dashboards.sdgindex.org/explorer
 # accessed on 2023-07-20
 
-sdg_index <- read_excel(path=paste0(raw_dir, "/SDR2023-data.xlsx"),
+sdg_index <- read_excel(path=paste0(raw_dir, "/SDR2024-data.xlsx"),
                         sheet='Backdated SDG Index'
 ) %>%
-  transmute(iso3c=`Country Code ISO3`,
+  transmute(iso3c=id,
          date=year,
          sdg_index_score=`SDG Index Score`) %>%
   group_by(iso3c) %>%
@@ -1616,7 +1616,7 @@ epi_df <- bind_rows(epi_2024_df,epi_2022_df, epi_2020_df, epi_2018_df) %>%
   select(iso3c, env_perform_index)
 
 # FAO food security index and prevalence of undernourishment (https://www.fao.org/faostat/en/#data/FS)
-fao_stats_df <- read_csv(paste0(raw_dir, "FAOSTAT_data_en_9-22-2023.csv")) %>%
+fao_stats_df <- read_csv(paste0(raw_dir, "FAOSTAT_data_en_1-6-2025.csv")) %>%
     mutate(geoAreaCode=as.numeric(`Area Code (M49)`)) %>% #convert to numeric
     left_join(
         read_csv(paste0(raw_dir, "/metadata/iso_codes.csv") ) %>%
@@ -2137,10 +2137,10 @@ debt_df <- wb_data(country="all",
 #https://dashboards.sdgindex.org/explorer
 # accessed on 2023-07-20
 
-sdg_index <- read_excel(path=paste0(raw_dir, "/SDR2023-data.xlsx"),
+sdg_index <- read_excel(path=paste0(raw_dir, "/SDR2024-data.xlsx"),
                         sheet='Backdated SDG Index'
 ) %>%
-  transmute(iso3c=`Country Code ISO3`,
+  transmute(iso3c=id,
          date=year,
          sdg_index_score=`SDG Index Score`) %>%
   group_by(iso3c) %>%
@@ -2200,7 +2200,7 @@ epi_df <- bind_rows(epi_2024_df,epi_2022_df, epi_2020_df, epi_2018_df) %>%
   select(iso3c, env_perform_index)
 
 # FAO food security index and prevalence of undernourishment (https://www.fao.org/faostat/en/#data/FS)
-fao_stats_df <- read_csv(paste0(raw_dir, "FAOSTAT_data_en_9-22-2023.csv")) %>%
+fao_stats_df <- read_csv(paste0(raw_dir, "FAOSTAT_data_en_1-6-2025.csv")) %>%
     mutate(geoAreaCode=as.numeric(`Area Code (M49)`)) %>% #convert to numeric
     left_join(
         read_csv(paste0(raw_dir, "/metadata/iso_codes.csv") ) %>%
@@ -2525,10 +2525,10 @@ write_excel_csv(comparison_avg_df, paste0(output_dir, "/SPI_Index_SDG_comparison
 ```{r regdf, echo=FALSE}
 
 
-sdg_index <- read_excel(path=paste0(raw_dir, "/SDR2023-data.xlsx"),
+sdg_index <- read_excel(path=paste0(raw_dir, "/SDR2024-data.xlsx"),
                         sheet='Backdated SDG Index'
 ) %>%
-  transmute(iso3c=`Country Code ISO3`,
+  transmute(iso3c=id,
          date=year,
          sdg_index_score=`SDG Index Score`) 
 
@@ -2577,7 +2577,7 @@ epi_df <- bind_rows(epi_2024_df,epi_2022_df, epi_2020_df, epi_2018_df) %>%
   select(iso3c, date, env_perform_index)
 
 # FAO food security index and prevalence of undernourishment (https://www.fao.org/faostat/en/#data/FS)
-fao_stats_df <- read_csv(paste0(raw_dir, "FAOSTAT_data_en_9-22-2023.csv")) %>%
+fao_stats_df <- read_csv(paste0(raw_dir, "FAOSTAT_data_en_1-6-2025.csv")) %>%
     mutate(geoAreaCode=as.numeric(`Area Code (M49)`)) %>% #convert to numeric
     left_join(
         read_csv(paste0(raw_dir, "/metadata/iso_codes.csv") ) %>%
@@ -2703,7 +2703,7 @@ ghsi_df <- read_csv(paste0(raw_dir, '2021-GHS-Index-April-2022.csv')) %>%
 predictors_df <- wbstats::wb_data(country="countries_only",
              indicator=c('NY.GDP.PCAP.KD', 'NV.IND.MANF.ZS', 'NV.AGR.TOTL.ZS','NE.TRD.GNFS.ZS', 'HD.HCI.OVRL','SE.PRM.ENRR','BN.CAB.XOKA.GD.ZS', 'CC.EST', "GE.EST", 'PV.EST', "RQ.EST", "RL.EST", "VA.EST", "BX.KLT.DINV.WD.GD.ZS", "SI.POV.DDAY", "SI.POV.GINI"),
              start_date=2010,
-             end_date=2022) %>%
+             end_date=2023) %>%
   mutate(date=as.numeric(date)) %>%
   left_join(sdg_index) %>%
   left_join(hdi_df) %>%
